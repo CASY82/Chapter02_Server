@@ -18,14 +18,16 @@ spring:
     hibernate:
       ddl-auto: none
     properties:
+      hibernate.dialect: org.hibernate.dialect.MySQL8Dialect
       hibernate.timezone.default_storage: NORMALIZE_UTC
       hibernate.jdbc.time_zone: UTC
 
 ---
 spring.config.activate.on-profile: local, test
 
+# 로컬 VMware 주소이므로 문제없음
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/hhplus?characterEncoding=UTF-8&serverTimezone=UTC
-    username: application
-    password: application
+    url: jdbc:mysql://192.168.152.120:3306/mydb?characterEncoding=UTF-8&serverTimezone=UTC
+    username: myuser
+    password: mypassword
