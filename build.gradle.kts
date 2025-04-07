@@ -35,16 +35,27 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
+	compileOnly("org.projectlombok:lombok")
+	annotationProcessor("org.projectlombok:lombok")
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
     // DB
 	runtimeOnly("com.mysql:mysql-connector-j")
+	
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:mysql")
+	testCompileOnly("org.projectlombok:lombok")
+	testAnnotationProcessor("org.projectlombok:lombok")	
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
 tasks.withType<Test> {
