@@ -21,15 +21,13 @@ public class Token {
 	private Instant updatedAt;
 	
 	// 새로운 토큰 생성
-    public Token createTokenData(Long userRefId, String queueValue) {
+    public Token(Long userRefId, String queueValue) {
     	UUID queueTokenId = UUID.randomUUID();
     	
     	this.setTokenId(String.valueOf(queueTokenId));
     	this.setUserRefId(userRefId);
     	this.setTokenValue(queueValue);
     	this.setExpireDate(this.expirePolicy());
-    	
-    	return this;
     }
     
     // 토큰 유효성 검증
