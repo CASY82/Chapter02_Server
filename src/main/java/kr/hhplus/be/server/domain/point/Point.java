@@ -19,7 +19,7 @@ public class Point {
 	private Instant updatedAt;
 	
 	// 포인트 충전
-	public void chargePoint(int amount) {
+	public void charge(int amount) {
 		if (amount < 0) {
 			log.warn("포인트는 음수일 수 없습니다.");
 			return;
@@ -29,7 +29,7 @@ public class Point {
 	}
 	
 	// 포인트 사용
-	public void usePoint(int amount) {
+	public void use(int amount) {
 		if (amount < 0) {
 			log.warn("포인트는 음수일 수 없습니다.");
 			return;
