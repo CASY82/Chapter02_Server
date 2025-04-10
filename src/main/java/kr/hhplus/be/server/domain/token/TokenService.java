@@ -20,17 +20,19 @@ public class TokenService {
 	private final TokenRepository repository;
 	private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 	
-	public String generateToken(Long userRefId, String queueValue) {
+	public String issueToken(Long userRefId, String queueValue) {
 		Token token = new Token(userRefId, queueValue);
 		this.repository.save(token);
 		
 		return Jwts.builder()
-            .setSubject("queueToken")
-            .claim("position", token.getTokenValue())
-            .claim("tokenId", token.getTokenId())
-            .setExpiration(Date.from(token.getExpireDate()))
-            .signWith(this.secretKey)
-            .compact();
+			    .setSubject("queueToken")
+			    .claim("userId", userRefId.toString())
+			    .claim("position", token.getTokenValue())
+			    .claim("tokenId", token.getTokenId())
+			    .setExpiration(Date.from(token.getExpireDate()))
+			    .signWith(this.secretKey)
+			    .compact();
+
 	}
 	
 	public boolean validateTokenValue(String jwt) {
@@ -61,4 +63,15 @@ public class TokenService {
 	      return false;
 	    }
 	}
+	
+	public Long extractUserId(String jwt) {
+	    Claims claims = Jwts.parserBuilder()
+	            .setSigningKey(this.secretKey)
+	            .build()
+	            .parseClaimsJws(jwt)
+	            .getBody();
+
+	    return Long.valueOf(claims.get("userId", String.class));
+	}
+
 }
