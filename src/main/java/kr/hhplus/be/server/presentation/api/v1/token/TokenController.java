@@ -14,7 +14,7 @@ import kr.hhplus.be.server.presentation.api.v1.token.obj.UserCredential;
 @RestController
 public class TokenController {
 	
-	@PostMapping("/auth/token")
+	@PostMapping("/token/publish")
 	public ResponseEntity<AuthToken> publishToken(@RequestBody UserCredential user) {
 		AuthToken token = new AuthToken();
 		

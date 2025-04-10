@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.domain.token;
+package kr.hhplus.be.server.domain;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import kr.hhplus.be.server.domain.token.Token;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
