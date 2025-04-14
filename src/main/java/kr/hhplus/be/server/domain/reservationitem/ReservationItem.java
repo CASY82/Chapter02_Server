@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReservationItem {
-	private Long id; // DB 식별자
-	private Long reservationItemId; // 도메인 식별자
+	private Long id;
 	private Long reservationRefId;
 	private Long seatRefId;
 	private Instant createdAt;

@@ -55,7 +55,7 @@ public class PaymentFacadeUnitTest {
         assertTrue(result);
         assertEquals(mockReservation.getReserveStatus(), ReservationStatus.COMPLETE.name());
         verify(pointService).usePoint(userId, amount);
-        verify(reservationService).save(mockReservation);
+        verify(reservationService).reserve(mockReservation);
         verify(paymentService).save(any(Payment.class));
     }
 
@@ -73,7 +73,7 @@ public class PaymentFacadeUnitTest {
         // then
         assertFalse(result);
         verify(pointService, never()).usePoint(anyLong(), anyInt());
-        verify(reservationService, never()).save(any());
+        verify(reservationService, never()).reserve(any());
         verify(paymentService, never()).save(any());
     }
 

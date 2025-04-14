@@ -10,7 +10,7 @@ public class ReservationService {
 
 	private final ReservationRepository reservationRepository;
 	
-	public void save(Reservation reservation) {
+	public void reserve(Reservation reservation) {
 		this.reservationRepository.save(reservation);
 	}
 	

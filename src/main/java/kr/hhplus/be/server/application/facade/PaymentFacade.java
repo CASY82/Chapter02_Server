@@ -37,7 +37,7 @@ public class PaymentFacade {
 			payment.setPaymentDate(Instant.now());
 			
 			reservation.setReserveStatus(ReservationStatus.COMPLETE.name());
-			this.reservationService.save(reservation);
+			this.reservationService.reserve(reservation);
 			this.paymentService.save(payment);
 			
 			return true;

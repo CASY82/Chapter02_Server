@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import kr.hhplus.be.server.application.facade.ReservationFacade;
+import kr.hhplus.be.server.application.facade.ReserveFacade;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.Seat;
@@ -27,7 +27,7 @@ public class ReservationController {
 	
 	private final SeatService seatService;
 	private final ScheduleService scheduleService;
-	private final ReservationFacade reservationFacade;
+	private final ReserveFacade reservationFacade;
 	
 	/**
 	 * 예약 가능한 날짜 선택 후, 예약 가능한 좌석
