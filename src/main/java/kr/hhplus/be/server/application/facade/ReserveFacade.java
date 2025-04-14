@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class ReservationFacade {
+public class ReserveFacade {
 	
 	private final ReservationService reservationService;
 	private final SeatService seatService;	
@@ -26,7 +26,7 @@ public class ReservationFacade {
 		
 		this.seatService.reserveSeat(seatId);
 		
-		this.reservationService.save(reservation);
+		this.reservationService.reserve(reservation);
 		
 	}
 }

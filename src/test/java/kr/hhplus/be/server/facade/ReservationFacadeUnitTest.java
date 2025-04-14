@@ -8,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import kr.hhplus.be.server.application.facade.ReservationFacade;
+import kr.hhplus.be.server.application.facade.ReserveFacade;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.seat.SeatService;
@@ -20,7 +20,7 @@ class ReservationFacadeUnitTest {
     @Mock private SeatService seatService;
 
     @InjectMocks
-    private ReservationFacade reservationFacade;
+    private ReserveFacade reservationFacade;
 
     @Test
     void 예약_성공_정상흐름() {
@@ -34,7 +34,7 @@ class ReservationFacadeUnitTest {
 
         // then
         verify(seatService).reserveSeat(seatId);
-        verify(reservationService).save(argThat(reservation ->
+        verify(reservationService).reserve(argThat(reservation ->
             reservation.getScheduleRefId().equals(scheduleId) &&
             reservation.getSeatRefId().equals(seatId) &&
             reservation.getUserRefId().equals(userId) &&
@@ -42,6 +42,7 @@ class ReservationFacadeUnitTest {
         ));
     }
 
+    // 리팩터 예정
     @Test
     void 좌석_예약_중_예외_발생시_예약저장_실패() {
         // given
@@ -56,6 +57,6 @@ class ReservationFacadeUnitTest {
             reservationFacade.reservation(scheduleId, seatId, userId);
         });
 
-        verify(reservationService, never()).save(any(Reservation.class));
+        verify(reservationService, never()).reserve(any(Reservation.class));
     }
 }
