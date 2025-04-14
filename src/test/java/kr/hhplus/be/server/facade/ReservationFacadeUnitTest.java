@@ -1,14 +1,19 @@
 package kr.hhplus.be.server.facade;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import kr.hhplus.be.server.application.facade.ReserveFacade;
+import kr.hhplus.be.server.application.facade.ReseravationFacade;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.seat.SeatService;
@@ -20,7 +25,7 @@ class ReservationFacadeUnitTest {
     @Mock private SeatService seatService;
 
     @InjectMocks
-    private ReserveFacade reservationFacade;
+    private ReseravationFacade reservationFacade;
 
     @Test
     void 예약_성공_정상흐름() {
@@ -30,7 +35,7 @@ class ReservationFacadeUnitTest {
         Long userId = 3L;
 
         // when
-        reservationFacade.reservation(scheduleId, seatId, userId);
+        reservationFacade.reserveSeat(scheduleId, seatId, userId);
 
         // then
         verify(seatService).reserveSeat(seatId);
@@ -54,7 +59,7 @@ class ReservationFacadeUnitTest {
 
         // when & then
         assertThrows(RuntimeException.class, () -> {
-            reservationFacade.reservation(scheduleId, seatId, userId);
+            reservationFacade.reserveSeat(scheduleId, seatId, userId);
         });
 
         verify(reservationService, never()).reserve(any(Reservation.class));

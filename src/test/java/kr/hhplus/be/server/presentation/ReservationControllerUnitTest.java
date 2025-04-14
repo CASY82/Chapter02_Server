@@ -22,7 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import kr.hhplus.be.server.application.facade.ReserveFacade;
+import kr.hhplus.be.server.application.facade.ReseravationFacade;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.Seat;
@@ -41,7 +41,7 @@ class ReservationControllerUnitTest {
     private ScheduleService scheduleService;
 
     @Mock
-    private ReserveFacade reservationFacade;
+    private ReseravationFacade reservationFacade;
 
     @InjectMocks
     private ReservationController reservationController;
@@ -148,6 +148,6 @@ class ReservationControllerUnitTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"));
 
-        verify(reservationFacade, times(1)).reservation(1L, 101L, 1001L);
+        verify(reservationFacade, times(1)).reserveSeat(1L, 101L, 1001L);
     }
 }

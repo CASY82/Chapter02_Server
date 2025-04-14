@@ -11,12 +11,12 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class ReserveFacade {
+public class ReseravationFacade {
 	
 	private final ReservationService reservationService;
 	private final SeatService seatService;	
 	@Transactional
-	public void reservation(Long scheduleId, Long seatId, Long userId) {
+	public void reserveSeat(Long scheduleId, Long seatId, Long userId) {
 		Reservation reservation = new Reservation();
 		
 		reservation.setReserveStatus(ReservationStatus.READY.name());
