@@ -1,9 +1,13 @@
 package kr.hhplus.be.server.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.time.Instant;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,8 +38,6 @@ class SeatServiceUnitTest {
         seat.setSeatColumn("1");
         seat.setScheduleRefId(1L);
         seat.setVenueRefId(1L);
-        seat.setCreatedAt(Instant.now());
-        seat.setUpdatedAt(Instant.now());
         return seat;
     }
 

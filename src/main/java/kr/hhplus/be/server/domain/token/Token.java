@@ -4,6 +4,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import kr.hhplus.be.server.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,14 +18,25 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Token {
-	private Long id;
-	private String tokenId; // 유저의 UUID
-	private Long userRefId;
-	private String tokenValue; // 대기열 관리 정보(대기 순서)
-	private Instant expireDate;
-	private Instant createdAt;
-	private Instant updatedAt;
+@Entity
+@Table(name = "token")
+public class Token extends BaseEntity {
+	
+	@Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "token_id", nullable = false, unique = true)
+    private String tokenId; // 유저의 UUID
+
+    @Column(name = "user_ref_id", nullable = false)
+    private Long userRefId;
+
+    @Column(name = "token_value", nullable = false)
+    private String tokenValue; // 대기열 관리 정보(대기 순서)
+
+    @Column(name = "expire_date", nullable = false)
+    private Instant expireDate;
 	
 	// 새로운 토큰 생성
     public Token(Long userRefId, String queueValue) {

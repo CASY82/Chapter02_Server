@@ -1,8 +1,6 @@
 package kr.hhplus.be.server.domain;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.time.Instant;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +13,7 @@ public class PointUnitTest {
 
     @BeforeEach
     public void setup() {
-        point = new Point(1L, 100L, 1000, Instant.now(), Instant.now());
+        point = new Point(1L, 100L, 1000);
     }
 
     @Test

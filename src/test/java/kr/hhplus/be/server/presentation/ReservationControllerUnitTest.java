@@ -64,13 +64,11 @@ class ReservationControllerUnitTest {
                 "A1",       // seatNumber
                 "A",        // seatRow
                 "1",        // seatColumn
-                false,      // reserved
-                Instant.now(), // createdAt
-                Instant.now()  // updatedAt
+                false      // reserved
         );
 
         Seat seat2 = new Seat(
-                2L, 102L, 10L, 1002L, 201L, "A2", "A", "2", false, Instant.now(), Instant.now()
+                2L, 102L, 10L, 1002L, 201L, "A2", "A", "2", false
         );
         when(seatService.getAvailableSeatList(1L)).thenReturn(List.of(
                 seat1, seat2));
@@ -98,13 +96,11 @@ class ReservationControllerUnitTest {
     	            201L,      // scheduleId
     	            301L,      // performanceRefId
     	            401L,      // venueRefId
-    	            "2025-04-20", // date
-    	            Instant.now(), // createdAt
-    	            Instant.now()  // updatedAt
+    	            "2025-04-20" // date
     	    );
 
     	    Schedule schedule2 = new Schedule(
-    	            2L, 202L, 301L, 401L, "2025-04-21", Instant.now(), Instant.now()
+    	            2L, 202L, 301L, 401L, "2025-04-21"
     	    );
     	
         when(scheduleService.getScheduleList(1L, 2L)).thenReturn(List.of(
