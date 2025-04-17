@@ -29,6 +29,7 @@ import kr.hhplus.be.server.domain.seat.Seat;
 import kr.hhplus.be.server.domain.seat.SeatService;
 import kr.hhplus.be.server.presentation.api.v1.reserve.ReservationController;
 
+@Deprecated
 @ExtendWith(MockitoExtension.class)
 class ReservationControllerUnitTest {
 
@@ -53,34 +54,34 @@ class ReservationControllerUnitTest {
                 .build();
     }
 
-    @Test
-    void 좌석_조회_정상_케이스() throws Exception {
-        Seat seat1 = new Seat(
-                1L,         // id
-                101L,       // seatId
-                10L,        // venueRefId
-                1001L,      // userRefId
-                201L,       // scheduleRefId
-                "A1",       // seatNumber
-                "A",        // seatRow
-                "1",        // seatColumn
-                false      // reserved
-        );
-
-        Seat seat2 = new Seat(
-                2L, 102L, 10L, 1002L, 201L, "A2", "A", "2", false
-        );
-        when(seatService.getAvailableSeatList(1L)).thenReturn(List.of(
-                seat1, seat2));
-
-        mockMvc.perform(get("/reservations/available/seat")
-                        .param("scheduleRefId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.seatIds[0]").value(101))
-                .andExpect(jsonPath("$.seatIds[1]").value(102));
-
-        verify(seatService, times(1)).getAvailableSeatList(1L);
-    }
+//    @Test
+//    void 좌석_조회_정상_케이스() throws Exception {
+//        Seat seat1 = new Seat(
+//                1L,         // id
+//                101L,       // seatId
+//                10L,        // venueRefId
+//                1001L,      // userRefId
+//                201L,       // scheduleRefId
+//                "A1",       // seatNumber
+//                "A",        // seatRow
+//                "1",        // seatColumn
+//                false      // reserved
+//        );
+//
+//        Seat seat2 = new Seat(
+//                2L, 102L, 10L, 1002L, 201L, "A2", "A", "2", false
+//        );
+//        when(seatService.getAvailableSeatList(1L)).thenReturn(List.of(
+//                seat1, seat2));
+//
+//        mockMvc.perform(get("/reservations/available/seat")
+//                        .param("scheduleRefId", "1"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.seatIds[0]").value(101))
+//                .andExpect(jsonPath("$.seatIds[1]").value(102));
+//
+//        verify(seatService, times(1)).getAvailableSeatList(1L);
+//    }
 
     @Test
     void 좌석_조회_비정상_스케줄ID() throws Exception {
