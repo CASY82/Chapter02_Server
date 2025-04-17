@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -23,4 +25,8 @@ public class PaymentDomainRepository implements PaymentRepository {
 		return this.findByUserRefId(userRefId);
 	}
 
+	@Override
+	public List<Payment> findAll() {
+		return this.repository.findAll();
+	}
 }

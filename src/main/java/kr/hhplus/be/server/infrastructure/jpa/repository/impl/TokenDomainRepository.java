@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository.impl;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import kr.hhplus.be.server.domain.token.Token;
@@ -26,6 +28,11 @@ public class TokenDomainRepository implements TokenRepository {
 	@Override
 	public Token findByUserRefId(Long userRefId) {
 		return this.repository.findByUserRefId(userRefId);
+	}
+
+	@Override
+	public List<Token> findAll() {
+		return this.repository.findAll();
 	}
 
 }
