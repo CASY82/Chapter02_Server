@@ -1,9 +1,10 @@
 package kr.hhplus.be.server.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.time.Instant;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,9 +29,7 @@ class PointServiceUnitTest {
         return new Point(
                 1L,
                 userRefId,
-                remainPoint,
-                Instant.now(),
-                Instant.now()
+                remainPoint
         );
     }
 

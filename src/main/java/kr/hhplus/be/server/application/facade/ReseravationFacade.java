@@ -15,19 +15,19 @@ public class ReseravationFacade {
 	
 	private final ReservationService reservationService;
 	private final SeatService seatService;	
+	
 	@Transactional
 	public void reserveSeat(Long scheduleId, Long seatId, Long userId) {
+		// 예약 작업을 진행한뒤 상태를 변경
 		Reservation reservation = new Reservation();
 		
-		reservation.setReserveStatus(ReservationStatus.READY.name());
+		reservation.setReserveStatus(ReservationStatus.READY);
 		reservation.setScheduleRefId(scheduleId);
 		reservation.setSeatRefId(seatId);
 		reservation.setUserRefId(userId);
 		
-		this.seatService.reserveSeat(seatId);
-		
-		this.reservationService.reserve(reservation);
-		
+		this.reservationService.reserveSeat(reservation);
+		// TODO: 에약된 좌석과 공연장 등에 대해서 데이터를 긁어온 다음 저장(데이터 만 모아서)
 	}
 }
 
