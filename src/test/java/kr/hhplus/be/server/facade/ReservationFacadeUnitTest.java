@@ -13,7 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import kr.hhplus.be.server.application.facade.ReseravationFacade;
+import kr.hhplus.be.server.application.facade.ReservationFacade;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.seat.SeatService;
@@ -25,7 +25,7 @@ class ReservationFacadeUnitTest {
     @Mock private SeatService seatService;
 
     @InjectMocks
-    private ReseravationFacade reservationFacade;
+    private ReservationFacade reservationFacade;
 
 //    @Test
 //    void 예약_성공_정상흐름() {

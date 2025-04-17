@@ -22,7 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import kr.hhplus.be.server.application.facade.ReseravationFacade;
+import kr.hhplus.be.server.application.facade.ReservationFacade;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.Seat;
@@ -42,7 +42,7 @@ class ReservationControllerUnitTest {
     private ScheduleService scheduleService;
 
     @Mock
-    private ReseravationFacade reservationFacade;
+    private ReservationFacade reservationFacade;
 
     @InjectMocks
     private ReservationController reservationController;

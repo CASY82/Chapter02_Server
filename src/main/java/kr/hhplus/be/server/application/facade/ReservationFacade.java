@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class ReseravationFacade {
+public class ReservationFacade {
 	
 	private final ReservationService reservationService;
 	private final SeatService seatService;	
