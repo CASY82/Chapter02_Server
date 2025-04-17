@@ -18,4 +18,9 @@ public class PaymentDomainRepository implements PaymentRepository {
 		this.repository.save(payment);
 	}
 
+	@Override
+	public Payment findByUserRefId(Long userRefId) {
+		return this.findByUserRefId(userRefId);
+	}
+
 }
