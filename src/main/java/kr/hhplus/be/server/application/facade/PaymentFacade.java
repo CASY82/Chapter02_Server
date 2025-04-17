@@ -27,8 +27,8 @@ public class PaymentFacade {
 	@Transactional
 	public boolean paymentProcess(long userId, int amount) {
 		Payment payment = new Payment();
-		Reservation reservation = this.reservationService.getReservation(userId);
-		if(this.seatService.confirmSeat(userId)) {
+		Reservation reservation = this.reservationService.getReservationByUser(userId);
+		if(this.reservationService.isReserve(reservation.getReservationId())) {
 			Seat confirmSeat = this.seatService.getSeat(reservation.getSeatRefId());
 			
 			this.pointService.usePoint(userId, amount);
@@ -36,8 +36,8 @@ public class PaymentFacade {
 			payment.setAmount(amount);
 			payment.setPaymentDate(Instant.now());
 			
-			reservation.setReserveStatus(ReservationStatus.COMPLETE.name());
-			this.reservationService.reserve(reservation);
+			reservation.setReserveStatus(ReservationStatus.COMPLETED);
+			this.reservationService.reserveSeat(reservation);
 			this.paymentService.save(payment);
 			
 			return true;

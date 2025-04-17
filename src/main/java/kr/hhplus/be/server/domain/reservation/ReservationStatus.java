@@ -1,5 +1,5 @@
 package kr.hhplus.be.server.domain.reservation;
 
 public enum ReservationStatus {
-	READY, PAY, COMPLETE
+	READY, PAY, COMPLETED, CANCLE
 }
