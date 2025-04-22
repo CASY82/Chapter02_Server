@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import kr.hhplus.be.server.application.facade.ReseravationFacade;
+import kr.hhplus.be.server.domain.reservation.Reservation;
+import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.Seat;
@@ -27,6 +29,7 @@ public class ReservationController {
 	
 	private final SeatService seatService;
 	private final ScheduleService scheduleService;
+	private final ReservationService reservationService;
 	private final ReseravationFacade reservationFacade;
 	
 	/**
@@ -38,15 +41,22 @@ public class ReservationController {
 	public ResponseEntity<SeatResponse> getAvailableSeat(@RequestParam("scheduleRefId") long scheduleRefId) {
 		if (scheduleRefId < 0) return ResponseEntity.status(HttpStatusCode.valueOf(400)).body(null);
 		
-		List<Seat> seatList = this.seatService.getAvailableSeatList(scheduleRefId);
+		List<Reservation> reservationList = this.reservationService.getReservationList(scheduleRefId);
 		
-		List<Long> seatIds = seatList.stream()
-                .map(Seat::getSeatId)
+		List<Long> reservedSeatIds = reservationList.stream()
+                .map(Reservation::getSeatRefId)
+                .collect(Collectors.toList());
+		
+		List<Seat> seatIds = this.seatService.getSeatList(scheduleRefId);
+		
+		List<Long> availableSeats = seatIds.stream()
+				.map(Seat::getId)
+                .filter(seatId -> !reservedSeatIds.contains(seatId))
                 .collect(Collectors.toList());
 
         // SeatResponse 객체 생성 및 seatIds 설정
         SeatResponse seatResponse = new SeatResponse();
-        seatResponse.setSeatIds(seatIds);
+        seatResponse.setSeatIds(availableSeats);
 		
 		return ResponseEntity.ok(seatResponse);
 	}
