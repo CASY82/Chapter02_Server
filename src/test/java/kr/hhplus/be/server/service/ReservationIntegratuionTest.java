@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import kr.hhplus.be.server.application.facade.ReseravationFacade;
+import kr.hhplus.be.server.application.facade.ReservationFacade;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationRepository;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
@@ -33,7 +33,7 @@ import kr.hhplus.be.server.domain.user.User;
 public class ReservationIntegratuionTest {
 	
 	@Autowired
-    private ReseravationFacade reservationFacade;
+    private ReservationFacade reservationFacade;
 
     @Autowired
     private ScheduleService scheduleService;
