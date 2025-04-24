@@ -110,7 +110,7 @@ public class PaymentFacadeUnitTest {
 
     @Test
     @DisplayName("예약이 사용자 소유가 아니면 예외를 던진다")
-    void 예약_소유자_불일치_예외() {
+    void 예약_소유자_불일치_IllegalArgumentException예외() {
         // given
         String userId = "user1";
         Long reservationId = 1L;
@@ -136,7 +136,7 @@ public class PaymentFacadeUnitTest {
 
     @Test
     @DisplayName("포인트 부족 시 예외를 던진다")
-    void 포인트_부족_예외() {
+    void 포인트_부족_RuntimeException예외() {
         // given
         String userId = "user1";
         Long reservationId = 1L;
