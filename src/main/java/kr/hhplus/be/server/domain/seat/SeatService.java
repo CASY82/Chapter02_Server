@@ -1,23 +1,16 @@
 package kr.hhplus.be.server.domain.seat;
 
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class SeatService {
+    private final SeatRepository seatRepository;
 
-	private final SeatRepository repository;
-
-	public List<Seat> getSeatList(Long scheduleRefId){
-		return this.repository.findAllSeat(scheduleRefId);
-	}
-	
-	public Seat getSeat(Long seatId) {
-		return this.repository.findById(seatId);
-	}
+    public List<Seat> getSeatsByVenue(Long venueRefId) {
+        return seatRepository.findByVenueRefId(venueRefId);
+    }
 }
-

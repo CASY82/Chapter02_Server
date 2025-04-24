@@ -1,38 +1,26 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository.impl;
 
-import java.util.List;
-
-import org.springframework.stereotype.Component;
-
 import kr.hhplus.be.server.domain.token.Token;
 import kr.hhplus.be.server.domain.token.TokenRepository;
 import kr.hhplus.be.server.infrastructure.jpa.repository.TokenJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class TokenDomainRepository implements TokenRepository {
 
-	private final TokenJpaRepository repository;
-	
-	@Override
-	public void save(Token token) {
-		this.repository.save(token);
-	}
+    private final TokenJpaRepository repository;
 
-	@Override
-	public Token findByTokenId(String tokenId) {
-		return this.repository.findByTokenId(tokenId);
-	}
+    @Override
+    public Token save(Token token) {
+        return repository.save(token);
+    }
 
-	@Override
-	public Token findByUserRefId(Long userRefId) {
-		return this.repository.findByUserRefId(userRefId);
-	}
-
-	@Override
-	public List<Token> findAll() {
-		return this.repository.findAll();
-	}
-
+    @Override
+    public Optional<Token> findByTokenValue(String tokenValue) {
+        return repository.findByTokenValue(tokenValue);
+    }
 }

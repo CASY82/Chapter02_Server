@@ -1,22 +1,20 @@
 package kr.hhplus.be.server.domain.schedule;
 
-import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ScheduleService {
-	private final ScheduleRepository repository;
+    private final ScheduleRepository scheduleRepository;
 
-	public List<Schedule> getScheduleList(Long performanceRefId, Long venueRefId) {
-		return this.repository.findAllAvailableSchedule(performanceRefId, venueRefId);
-	}
-	
-	public Schedule getSchedule(Long scheduleId) {
-		return this.repository.findById(scheduleId);
-	}
+    public List<Schedule> getAvailableSchedules(Long performanceRefId) {
+        return scheduleRepository.findAllAvailableSchedules(performanceRefId);
+    }
+
+    public Schedule getSchedule(Long scheduleId) {
+        return scheduleRepository.findById(scheduleId);
+    }
 }
-

@@ -5,9 +5,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import kr.hhplus.be.server.application.facade.PointFacade;
+import kr.hhplus.be.server.presentation.api.v1.point.PointController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,16 +20,13 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import kr.hhplus.be.server.domain.point.PointService;
-import kr.hhplus.be.server.presentation.api.v1.point.PointController;
-
 @ExtendWith(MockitoExtension.class)
 class PointControllerUnitTest {
 
     private MockMvc mockMvc;
 
     @Mock
-    private PointService pointService;
+    private PointFacade pointFacade;
 
     @InjectMocks
     private PointController pointController;
@@ -41,32 +40,31 @@ class PointControllerUnitTest {
 
     @Test
     public void 포인트_충전_정상_케이스() throws Exception {
-        when(pointService.chargePoint(1L, 500)).thenReturn(1500);
+        when(pointFacade.chargePoints("1", 500L)).thenReturn(1500L);
 
-        mockMvc.perform(post("/point/balance/charge")
+        mockMvc.perform(post("/points/charge")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                             {
-                                "userId": 1,
+                                "userId": "1",
                                 "amount": 500
                             }
                         """))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1500"));
+                .andExpect(jsonPath("$.remainPoint").value(1500));
 
-        verify(pointService, times(1)).chargePoint(1L, 500);
+        verify(pointFacade, times(1)).chargePoints("1", 500L);
     }
 
     @Test
     public void 포인트_조회_정상_케이스() throws Exception {
-        when(pointService.getPoint(1L)).thenReturn(1000);
+        when(pointFacade.getPointBalance("1")).thenReturn(1000L);
 
-        mockMvc.perform(get("/point/balance/get")
+        mockMvc.perform(get("/points/balance")
                         .param("userId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1000"));
+                .andExpect(jsonPath("$.remainPoint").value(1000));
 
-        verify(pointService, times(1)).getPoint(1L);
+        verify(pointFacade, times(1)).getPointBalance("1");
     }
 }
-

@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository.impl;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -13,21 +14,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ScheduleDomainRepository implements ScheduleRepository {
 
-	private final ScheduleJpaRepository repository;
-	
-	@Override
-	public void save(Schedule schedule) {
-		this.repository.save(schedule);
-	}
+    private final ScheduleJpaRepository repository;
 
-	@Override
-	public List<Schedule> findAllAvailableSchedule(Long performanceRefId, Long venueRefId) {
-		return this.repository.findAll();
-	}
+    @Override
+    public void save(Schedule schedule) {
+        repository.save(schedule);
+    }
 
-	@Override
-	public Schedule findById(Long scheduleId) {
-		return this.repository.findByScheduleId(scheduleId);
-	}
+    @Override
+    public List<Schedule> findAllAvailableSchedules(Long performanceRefId) {
+        return repository.findByPerformanceRefIdAndScheduleDateTimeAfter(performanceRefId, Instant.now());
+    }
 
+    @Override
+    public Schedule findById(Long scheduleId) {
+        return repository.findByScheduleId(scheduleId)
+                .orElseThrow(() -> new IllegalArgumentException("Schedule not found with scheduleId: " + scheduleId));
+    }
 }

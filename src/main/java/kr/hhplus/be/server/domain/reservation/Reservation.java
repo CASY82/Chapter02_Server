@@ -63,8 +63,8 @@ public class Reservation extends BaseEntity {
  		this.reserveStatus = ReservationStatus.COMPLETED;
  	}
 
- 	// 비예약 상태 변경
- 	public void cancle() {
- 		this.reserveStatus = ReservationStatus.CANCLE;
+ 	// 예약 취소 상태 변경
+ 	public void cancel() {
+ 		this.reserveStatus = ReservationStatus.CANCEL;
  	}
 }

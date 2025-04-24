@@ -1,11 +1,16 @@
 package kr.hhplus.be.server.application.facade;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.performance.PerformanceService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.reservation.ReservationStatus;
+import kr.hhplus.be.server.domain.schedule.Schedule;
+import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.SeatService;
 import lombok.RequiredArgsConstructor;
 
@@ -13,21 +18,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ReservationFacade {
 	
-	private final ReservationService reservationService;
-	private final SeatService seatService;	
+	private final PerformanceService performanceService;
+    private final ScheduleService scheduleService;
 	
-	@Transactional
-	public void reserveSeat(Long scheduleId, Long seatId, Long userId) {
-		// 예약 작업을 진행한뒤 상태를 변경
-		Reservation reservation = new Reservation();
-		
-		reservation.setReserveStatus(ReservationStatus.READY);
-		reservation.setScheduleRefId(scheduleId);
-		reservation.setSeatRefId(seatId);
-		reservation.setUserRefId(userId);
-		
-		this.reservationService.reserveSeat(reservation);
-		// TODO: 에약된 좌석과 공연장 등에 대해서 데이터를 긁어온 다음 저장(데이터 만 모아서)
-	}
+	public List<Schedule> getAvailableSchedules(Long performanceId) {
+        // 공연 존재 여부 확인
+        this.performanceService.getPerformance(performanceId);
+
+        // 예약 가능 일정 조회
+        return this.scheduleService.getAvailableSchedules(performanceId);
+    }
 }
 

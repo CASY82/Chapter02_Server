@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.domain.point;
 
+import java.util.Optional;
+
 public interface PointRepository {
-	void save(Point point);
-	Point findByUserRefId(Long userRefId);
+    Optional<Point> findByUserRefId(Long userRefId);
+    Point save(Point point);
 }

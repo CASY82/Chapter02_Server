@@ -1,40 +1,34 @@
 package kr.hhplus.be.server.domain.reservation;
 
-import java.util.List;
-
-import org.springframework.stereotype.Service;
-
+import kr.hhplus.be.server.domain.reservationitem.ReservationItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class ReservationService {
+    private final ReservationRepository reservationRepository;
+    private final ReservationItemService reservationItemService;
 
-	private final ReservationRepository reservationRepository;
-	
-	public void reserveSeat(Reservation reservation) {
-		reservation.reserve();
-		this.reservationRepository.save(reservation);
-	}
-	
-	public void cancleSeat(Reservation reservation) {
-		reservation.cancle();
-		this.reservationRepository.save(reservation);
-	}
-	
-	public Reservation getReservationByUser(Long userId) {
-		return this.reservationRepository.findByUserRefId(userId);
-	}
-	
-	public boolean isReserve(Long reservationId) {
-		Reservation reservation = this.reservationRepository.findById(reservationId);
-		return reservation.isReservable();
-	}
-	
-	public List<Reservation> getReservationList(Long scheduleRefId) {
-		return this.reservationRepository.findAllReservedSeat(scheduleRefId);
-	}
+    public Reservation getReservation(Long reservationId) {
+        Reservation reservation = reservationRepository.findByReservationId(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("Reservation not found with reservationId: " + reservationId));
+        if (!reservation.isReservable()) {
+            throw new IllegalArgumentException("Reservation is not reservable");
+        }
+        if (!ReservationStatus.PAY.equals(reservation.getReserveStatus())) {
+            throw new IllegalArgumentException("Reservation is not in PAY status");
+        }
+        reservationItemService.getReservationItems(reservationId); // ReservationItem 존재 여부 검증
+        reservationItemService.calculateTotalAmount(reservationId); // 합계 검증
+        return reservation;
+    }
 
+    public Reservation completeReservation(Long reservationId) {
+        Reservation reservation = getReservation(reservationId);
+        reservation.reserve();
+        return reservationRepository.save(reservation);
+    }
 }
 
 

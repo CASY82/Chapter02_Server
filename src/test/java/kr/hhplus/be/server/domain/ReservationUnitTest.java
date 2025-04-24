@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationStatus;
 
@@ -24,6 +24,7 @@ public class ReservationUnitTest {
         reservation.setSeatRefId(1L);
         reservation.setScheduleRefId(1L);
         reservation.setReserveStatus(ReservationStatus.READY);
+        reservation.setReservationItems(new ArrayList<>());
     }
 
     @Test
@@ -59,7 +60,8 @@ public class ReservationUnitTest {
         reservation.reserve();
 
         // then
-        assertEquals(ReservationStatus.COMPLETED, reservation.getReserveStatus(), "예약 상태가 COMPLETED로 변경되어야 한다.");
+        assertEquals(ReservationStatus.COMPLETED, reservation.getReserveStatus(), 
+            "예약 상태가 COMPLETED로 변경되어야 한다.");
     }
 
     @Test
@@ -68,9 +70,22 @@ public class ReservationUnitTest {
         reservation.setReserveStatus(ReservationStatus.READY);
 
         // when
-        reservation.cancle();
+        reservation.cancel();
 
         // then
-        assertEquals(ReservationStatus.CANCLE, reservation.getReserveStatus(), "예약 상태가 CANCLE로 변경되어야 한다.");
+        assertEquals(ReservationStatus.CANCEL, reservation.getReserveStatus(), 
+            "예약 상태가 CANCEL로 변경되어야 한다.");
+    }
+
+    @Test
+    public void 예약_아이템_초기화_테스트() {
+        // given
+        // setup에서 이미 reservationItems가 초기화됨
+
+        // when
+        int itemSize = reservation.getReservationItems().size();
+
+        // then
+        assertEquals(0, itemSize, "예약 아이템 리스트가 비어 있어야 한다.");
     }
 }

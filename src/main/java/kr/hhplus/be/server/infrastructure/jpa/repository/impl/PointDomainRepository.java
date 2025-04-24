@@ -1,26 +1,26 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository.impl;
 
-import org.springframework.stereotype.Component;
-
 import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointRepository;
 import kr.hhplus.be.server.infrastructure.jpa.repository.PointJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class PointDomainRepository implements PointRepository {
-	
-	private final PointJpaRepository repository;
 
-	@Override
-	public void save(Point point) {
-		this.repository.save(point);
-	}
+    private final PointJpaRepository repository;
 
-	@Override
-	public Point findByUserRefId(Long userRefId) {
-		return this.findByUserRefId(userRefId);
-	}
+    @Override
+    public Optional<Point> findByUserRefId(Long userRefId) {
+        return repository.findByUserRefId(userRefId);
+    }
 
+    @Override
+    public Point save(Point point) {
+        return repository.save(point);
+    }
 }

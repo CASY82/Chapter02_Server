@@ -1,14 +1,10 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository;
 
-import java.util.List;
-
+import kr.hhplus.be.server.domain.reservation.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import kr.hhplus.be.server.domain.reservation.Reservation;
-import kr.hhplus.be.server.domain.reservation.ReservationStatus;
-
+import java.util.Optional;
 
 public interface ReservationJpaRepository extends JpaRepository<Reservation, Long> {
-	Reservation findByUserRefId(Long userRefId);
-	List<Reservation> findAllByReserveStatusAndScheduleRefId(ReservationStatus reserveStatus, Long scheduleRefId);
+    Optional<Reservation> findByReservationId(Long reservationId);
 }

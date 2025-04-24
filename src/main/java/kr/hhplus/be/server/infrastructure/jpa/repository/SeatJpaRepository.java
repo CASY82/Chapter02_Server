@@ -1,13 +1,12 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository;
 
-import java.util.List;
-
+import kr.hhplus.be.server.domain.seat.Seat;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import kr.hhplus.be.server.domain.seat.Seat;
+import java.util.List;
+import java.util.Optional;
 
 public interface SeatJpaRepository extends JpaRepository<Seat, Long> {
-	List<Seat> findAllByScheduleRefId(Long scheduleRefId);
-	Seat findByUserRefId(Long userRefId);
-	Seat findBySeatId(Long seatId);
+    List<Seat> findByVenueRefId(Long venueRefId);
+    Optional<Seat> findBySeatId(Long seatId);
 }

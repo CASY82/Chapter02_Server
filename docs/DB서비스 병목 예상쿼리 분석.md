@@ -270,6 +270,9 @@ entity reservation_item {
   reservation_ref_id : BIGINT FK
   seat_ref_id : BIGINT FK
   schedule_ref_id : BIGINT FK
+  quantity : INTEGER
+  unit_price : INTEGER
+  total_amount : INTEGER
   created_at : DATETIME
   updated_at : DATETIME
 }

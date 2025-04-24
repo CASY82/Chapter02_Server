@@ -1,9 +1,10 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository;
 
+import kr.hhplus.be.server.domain.performance.Performance;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import kr.hhplus.be.server.domain.performance.Performance;
+import java.util.Optional;
 
 public interface PerformanceJpaRepository extends JpaRepository<Performance, Long> {
-	Performance findByPerformanceId(Long performanceId);
+    Optional<Performance> findByPerformanceId(Long performanceId);
 }

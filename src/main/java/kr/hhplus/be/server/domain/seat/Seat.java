@@ -1,11 +1,6 @@
 package kr.hhplus.be.server.domain.seat;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import kr.hhplus.be.server.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,8 +12,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "seat")
 public class Seat extends BaseEntity {
-	
-	@Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -28,15 +23,15 @@ public class Seat extends BaseEntity {
     @Column(name = "venue_ref_id", nullable = false)
     private Long venueRefId;
 
-    @Column(name = "schedule_ref_id", nullable = false)
-    private Long scheduleRefId;
-
     @Column(name = "seat_number", nullable = false)
     private String seatNumber;
 
-    @Column(name = "seat_row", nullable = false)
+    @Column(name = "seat_row")
     private String seatRow;
 
-    @Column(name = "seat_column", nullable = false)
+    @Column(name = "seat_column")
     private String seatColumn;
+
+    @Column(name = "version", nullable = false)
+    private Integer version;
 }

@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.domain.schedule;
 
+import java.time.Instant;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,6 +33,6 @@ public class Schedule extends BaseEntity {
     @Column(name = "venue_ref_id", nullable = false)
     private Long venueRefId;
 
-    @Column(name = "date", nullable = false)
-    private String date;
+    @Column(name = "schedule_date_time", nullable = false)
+    private Instant scheduleDateTime;
 }

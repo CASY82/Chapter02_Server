@@ -1,13 +1,15 @@
 package kr.hhplus.be.server.presentation.api.v1.obj;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class PaymentRequest {
-	Long userId;
-	int amount;
+    @NotBlank(message = "User ID must not be blank")
+    private String userId;
+
+    @NotNull(message = "Reservation ID must not be null")
+    private Long reservationId;
 }

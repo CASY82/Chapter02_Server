@@ -1,10 +1,8 @@
 package kr.hhplus.be.server.domain.token;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface TokenRepository {
-	void save(Token token);
-	Token findByTokenId(String tokenId);
-	Token findByUserRefId(Long userRefId);
-	List<Token> findAll();
+    Token save(Token token);
+    Optional<Token> findByTokenValue(String tokenValue);
 }
