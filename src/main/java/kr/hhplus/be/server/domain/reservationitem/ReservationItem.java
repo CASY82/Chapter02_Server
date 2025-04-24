@@ -11,7 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "reservation_item")
+@Table(
+    name = "reservation_item",
+    uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"reservation_ref_id", "seat_ref_id"})
+    }
+)
 public class ReservationItem extends BaseEntity {
 
     @Id
@@ -36,4 +41,7 @@ public class ReservationItem extends BaseEntity {
 
     @Column(name = "total_amount", nullable = false)
     private Integer totalAmount;
+
+    @Version
+    private Long version;
 }

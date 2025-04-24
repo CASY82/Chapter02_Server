@@ -1,110 +1,120 @@
-//package kr.hhplus.be.server.service;
-//
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertFalse;
-//import static org.junit.jupiter.api.Assertions.assertNotNull;
-//import static org.junit.jupiter.api.Assertions.assertTrue;
-//
-//import java.lang.reflect.Field;
-//import java.security.Key;
-//import java.time.Instant;
-//
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.test.context.SpringBootTest;
-//import org.springframework.test.context.ActiveProfiles;
-//
-//import io.jsonwebtoken.Claims;
-//import io.jsonwebtoken.Jwts;
-//import kr.hhplus.be.server.domain.token.Token;
-//import kr.hhplus.be.server.domain.token.TokenRepository;
-//import kr.hhplus.be.server.domain.token.TokenService;
-//import kr.hhplus.be.server.domain.user.User;
-//
-//@SpringBootTest
-//@ActiveProfiles("test")
-//public class TokenServiceIntegrationTest {
-//
-//    @Autowired
-//    private TokenService tokenService;
-//
-//    @Autowired
-//    private TokenRepository tokenRepository;
-//
-//    private User testUser;
-//
-//    @BeforeEach
-//    public void setup() {
-//        // 테스트용 사용자 생성 및 저장
-//        testUser = new User();
-//        testUser.setUserId("test-user-1");
-//        testUser.setUsername("TestUser");
-//        testUser.setPassword("password123");
-//    }
-//
-//    @Test
-//    public void 유저_토큰_발급_정상_테스트() {
-//        // given
-//        Long userRefId = this.testUser.getId();
-//        String queueValue = "queue-position-1";
-//
-//        // when
-//        String jwt = this.tokenService.issueToken(userRefId, queueValue);
-//
-//        // then
-//        assertNotNull(jwt, "발급된 JWT 토큰은 null이 아니어야 한다.");
-//
-//        // JWT에서 tokenId 추출 (validateTokenValue의 로직 재사용)
-//        Claims claims = Jwts.parserBuilder()
-//                .setSigningKey(getSigningKey()) // private secretKey 접근을 위해 리플렉션 또는 별도 메서드 필요
-//                .build()
-//                .parseClaimsJws(jwt)
-//                .getBody();
-//        String tokenId = claims.get("tokenId", String.class);
-//
-//        Token savedToken = this.tokenRepository.findByTokenId(tokenId);
-//        
-//        assertNotNull(savedToken, "DB에 토큰이 저장되어야 한다.");
-//        assertEquals(userRefId, savedToken.getUserRefId(), "토큰의 userRefId가 일치해야 한다.");
-//        assertEquals(queueValue, savedToken.getTokenValue(), "토큰의 queueValue가 일치해야 한다.");
-//        assertTrue(savedToken.getExpireDate().isAfter(Instant.now()), "토큰의 만료 시간이 현재 시간 이후여야 한다.");
-//        
-//        boolean isValid = this.tokenService.validateTokenValue(jwt);
-//        assertTrue(isValid, "발급된 토큰은 유효해야 한다.");
-//    }
-//
-//    @Test
-//    public void 만료된_토큰_유효성_검증_실패_테스트() {
-//        // given
-//        Long userRefId = this.testUser.getId();
-//        String queueValue = "queue-position-2";
-//        
-//        // 만료된 토큰 수동 생성
-//        Token expiredToken = new Token(userRefId, queueValue);
-//        expiredToken.setExpireDate(Instant.now().minusSeconds(60)); // 만료 시간 과거로 설정
-//        this.tokenRepository.save(expiredToken);
-//
-//        // 새로운 토큰 발급
-//        String jwt = this.tokenService.issueToken(userRefId, queueValue);
-//
-//        // then
-//        boolean isValid = this.tokenService.validateTokenValue(jwt);
-//        assertTrue(isValid, "새로 발급된 토큰은 유효해야 한다.");
-//
-//        // 만료된 토큰 확인
-//        Token savedExpiredToken = this.tokenRepository.findByTokenId(expiredToken.getTokenId());
-//        assertFalse(savedExpiredToken.validationCheck(), "만료된 토큰은 유효하지 않아야 한다.");
-//    }
-//
-//    // secretKey 접근을 위한 임시 메서드 (실제로는 TokenService에 추가하거나 다른 방식으로 처리)
-//    private Key getSigningKey() {
-//        try {
-//            Field field = TokenService.class.getDeclaredField("secretKey");
-//            field.setAccessible(true);
-//            return (Key) field.get(this.tokenService);
-//        } catch (Exception e) {
-//            throw new RuntimeException("Failed to access secretKey", e);
-//        }
-//    }
-//}
+package kr.hhplus.be.server.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.token.Token;
+import kr.hhplus.be.server.domain.token.TokenRepository;
+import kr.hhplus.be.server.domain.token.TokenService;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserRepository;
+import kr.hhplus.be.server.infrastructure.queue.QueueStore;
+
+@SpringBootTest
+@Transactional
+class TokenServiceTest {
+
+    @Autowired
+    private TokenService tokenService;
+
+    @Autowired
+    private TokenRepository tokenRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @MockBean
+    private QueueStore queueStore;
+
+    private User testUser;
+
+    @BeforeEach
+    void setup() {
+        testUser = new User();
+        testUser.setUserId("testUser");
+        testUser.setUsername("testUser123");
+        testUser.setPassword("pw");
+        testUser.setName("테스터");
+        userRepository.save(testUser);
+    }
+
+    @Test
+    void issueToken_처음발급이면_새로저장되고_반환된다() {
+        // when
+        Token token = tokenService.issueToken(testUser.getId());
+
+        // then
+        assertThat(token).isNotNull();
+        assertThat(token.getTokenValue()).isNotBlank();
+        assertThat(token.getUser().getId()).isEqualTo(testUser.getId());
+    }
+
+    @Test
+    void issueToken_이미_유효한_토큰이_있으면_기존_토큰_반환한다() {
+        // given
+        Token token1 = tokenService.issueToken(testUser.getId());
+
+        // when
+        Token token2 = tokenService.issueToken(testUser.getId());
+
+        // then
+        assertThat(token1.getId()).isEqualTo(token2.getId());
+    }
+
+    @Test
+    void validateToken_정상_토큰이면_예외_발생하지_않는다() {
+        // given
+        Token token = tokenService.issueToken(testUser.getId());
+
+        // when & then
+        assertThatCode(() -> tokenService.validateToken(token.getTokenValue()))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void validateToken_만료된_토큰이면_예외를_던진다() {
+        // given
+        Token token = tokenService.issueToken(testUser.getId());
+        token.setExpireDate(token.getExpireDate().minusSeconds(1800)); // 강제 만료
+        tokenRepository.save(token);
+
+        // when & then
+        assertThatThrownBy(() -> tokenService.validateToken(token.getTokenValue()))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("expired");
+    }
+
+    @Test
+    void getQueueStatus_정상토큰이면_포지션과_입장가능여부를_반환한다() {
+        // given
+        Token token = tokenService.issueToken(testUser.getId());
+
+        when(queueStore.getPosition(testUser.getId())).thenReturn(1);
+        when(queueStore.isNowEnterable(testUser.getId(), 3)).thenReturn(true);
+
+        // when
+        var response = tokenService.getQueueStatus("Bearer " + token.getTokenValue());
+
+        // then
+        assertThat(response.position()).isEqualTo(1);
+    }
+
+    @Test
+    void getQueueStatus_잘못된_토큰이면_에러_메시지와_position_음수() {
+        // when
+        var response = tokenService.getQueueStatus("Bearer invalid.jwt.token");
+
+        // then
+        assertThat(response.position()).isEqualTo(-1);
+    }
+}
+

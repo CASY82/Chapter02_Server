@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.infrastructure.queue.QueueStore;
 import kr.hhplus.be.server.presentation.api.v1.token.TokenController.QueueStatusResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,19 @@ public class TokenService {
     @Value("${queue.max-enterable:3}")
     private int maxEnterable;
 
+    @Transactional
     public Token issueToken(Long userRefId) {
+        // 기존 토큰 확인, 비관적 락 적용
+        Token existingToken = tokenRepository.findByUserRefIdWithLock(userRefId)
+                .filter(Token::isValid)
+                .orElse(null);
+
+        if (existingToken != null) {
+            // 멱등성: 유효한 기존 토큰 반환
+            return existingToken;
+        }
+
+        // 신규 토큰 생성
         String tokenValue = generateJwt(userRefId);
         Token token = Token.create(userRefId, tokenValue);
         return tokenRepository.save(token);

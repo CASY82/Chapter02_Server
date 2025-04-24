@@ -18,9 +18,19 @@ public class ReservationDomainRepository implements ReservationRepository {
     public Optional<Reservation> findByReservationId(Long reservationId) {
         return repository.findByReservationId(reservationId);
     }
+    
+    @Override
+    public Optional<Reservation> findByReservationIdWithLock(Long reservationId) {
+        return repository.findByReservationIdWithLock(reservationId);
+    }
 
     @Override
     public Reservation save(Reservation reservation) {
         return repository.save(reservation);
     }
+
+	@Override
+	public Optional<Reservation> findById(Long id) {
+		return repository.findById(id);
+	}
 }

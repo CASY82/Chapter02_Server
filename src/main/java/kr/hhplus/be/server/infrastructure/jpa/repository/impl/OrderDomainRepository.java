@@ -23,4 +23,9 @@ public class OrderDomainRepository implements OrderRepository {
     public Order save(Order order) {
         return repository.save(order);
     }
+    
+    @Override
+    public Optional<Order> findByIdWithLock(Long orderId) {
+        return repository.findByIdWithLock(orderId);
+    }
 }

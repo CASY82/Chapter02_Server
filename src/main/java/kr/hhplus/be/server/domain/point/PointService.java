@@ -4,6 +4,8 @@ import kr.hhplus.be.server.domain.user.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
+
 @Service
 @RequiredArgsConstructor
 public class PointService {
@@ -32,13 +34,16 @@ public class PointService {
                 .orElse(0);
     }
     
-    public Point usePoint(Long userRefId, Integer amount) {
-        Point point = pointRepository.findByUserRefId(userRefId)
-                .orElseThrow(() -> new IllegalArgumentException("Point not found for userRefId: " + userRefId));
-        if (point.getRemainPoint() < amount) {
-            throw new IllegalArgumentException("Insufficient points");
-        }
+    @Transactional
+    public Point usePoints(Long userRefId, int amount) {
+        Point point = pointRepository.findByUserRefIdWithLock(userRefId)
+                .orElseThrow(() -> new IllegalStateException("No points found for user: " + userRefId));
+
         point.use(amount);
+        if (point.getRemainPoint() < 0) {
+            throw new IllegalStateException("Insufficient points for user: " + userRefId);
+        }
+
         return pointRepository.save(point);
     }
 }

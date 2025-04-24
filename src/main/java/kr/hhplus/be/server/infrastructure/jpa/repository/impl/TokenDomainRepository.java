@@ -23,4 +23,9 @@ public class TokenDomainRepository implements TokenRepository {
     public Optional<Token> findByTokenValue(String tokenValue) {
         return repository.findByTokenValue(tokenValue);
     }
+    
+    @Override
+    public Optional<Token> findByUserRefIdWithLock(Long userRefId) {
+        return repository.findByUserRefIdWithLock(userRefId);
+    }
 }
