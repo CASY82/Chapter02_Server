@@ -7,5 +7,5 @@ import kr.hhplus.be.server.domain.orderitem.OrderItem;
 import java.util.List;
 
 public interface OrderItemJpaRepository extends JpaRepository<OrderItem, Long> {
-    List<OrderItem> findByOrderRefId(Long orderRefId);
+    List<OrderItem> findByOrder_OrderId(Long orderRefId);
 }

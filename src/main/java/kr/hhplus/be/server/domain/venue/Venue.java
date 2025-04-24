@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "venues")
+@Table(name = "venue")
 public class Venue extends BaseEntity{
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

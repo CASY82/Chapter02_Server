@@ -1,5 +1,9 @@
 package kr.hhplus.be.server.domain.venue;
 
+import java.util.Optional;
+
 public interface VenueRepository {
-	Venue findById(Long venueId);
+    Optional<Venue> findById(Long id);
+    Optional<Venue> findByIdWithLock(Long id);
+    Venue save(Venue venue);
 }

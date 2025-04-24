@@ -16,6 +16,6 @@ public class ReservationItemDomainRepository implements ReservationItemRepositor
 
     @Override
     public List<ReservationItem> findByReservationRefId(Long reservationRefId) {
-        return repository.findByReservationRefId(reservationRefId);
+        return repository.findByReservation_ReservationId(reservationRefId);
     }
 }

@@ -18,6 +18,6 @@ public class OrderItemDomainRepository implements OrderItemRepository {
 
     @Override
     public List<OrderItem> findByOrderRefId(Long orderRefId) {
-        return repository.findByOrderRefId(orderRefId);
+        return repository.findByOrder_OrderId(orderRefId);
     }
 }

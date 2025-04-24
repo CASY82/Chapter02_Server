@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.infrastructure.jpa.repository.impl;
 
 
+import kr.hhplus.be.server.domain.reservation.ReservationStatus;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservation;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservationRepository;
 import kr.hhplus.be.server.infrastructure.jpa.repository.SeatReservationJpaRepository;
@@ -17,6 +18,6 @@ public class SeatReservationDomainRepository implements SeatReservationRepositor
 
     @Override
     public List<SeatReservation> findByScheduleIdAndNotCancelled(Long scheduleId) {
-        return repository.findByScheduleIdAndNotCancelled(scheduleId);
+        return repository.findByScheduleIdAndNotCancelled(scheduleId, ReservationStatus.CANCEL);
     }
 }
