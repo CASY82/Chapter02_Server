@@ -10,9 +10,10 @@ import kr.hhplus.be.server.domain.seatreservation.SeatReservation;
 
 public interface SeatReservationJpaRepository extends JpaRepository<SeatReservation, Long> {
 
-    @Query("SELECT sr FROM SeatReservation sr " +
-            "JOIN Reservation r ON sr.reservationRefId = r.id " +
-            "JOIN ReservationItem ri ON r.id = ri.reservation.id " +
-            "WHERE ri.scheduleRefId = :scheduleId AND r.reserveStatus != :cancelledStatus")
-    List<SeatReservation> findByScheduleIdAndNotCancelled(Long scheduleId, ReservationStatus cancelledStatus);
+	// 시간 안 씀: 모든 PAY 상태 좌석 예약 다 불러옴
+	@Query("SELECT sr FROM SeatReservation sr " +
+	       "JOIN Reservation r ON sr.reservationRefId = r.id " +
+	       "WHERE sr.reserved = true " +
+	       "AND r.reserveStatus = :pendingStatus")
+	List<SeatReservation> findCancleSeatReservations(ReservationStatus pendingStatus);
 }
