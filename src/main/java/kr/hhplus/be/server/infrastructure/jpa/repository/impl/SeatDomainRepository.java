@@ -18,4 +18,9 @@ public class SeatDomainRepository implements SeatRepository {
     public List<Seat> findByVenueRefId(Long venueRefId) {
         return repository.findByVenueRefId(venueRefId);
     }
+
+	@Override
+	public void save(Seat seat) {
+		repository.save(seat);
+	}
 }

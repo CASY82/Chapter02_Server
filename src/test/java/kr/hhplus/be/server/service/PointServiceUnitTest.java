@@ -1,126 +1,163 @@
-//package kr.hhplus.be.server.service;
-//
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertThrows;
-//import static org.mockito.Mockito.spy;
-//import static org.mockito.Mockito.verify;
-//import static org.mockito.Mockito.when;
-//
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.api.extension.ExtendWith;
-//import org.mockito.InjectMocks;
-//import org.mockito.Mock;
-//import org.mockito.junit.jupiter.MockitoExtension;
-//
-//import kr.hhplus.be.server.domain.point.Point;
-//import kr.hhplus.be.server.domain.point.PointRepository;
-//import kr.hhplus.be.server.domain.point.PointService;
-//
-//@ExtendWith(MockitoExtension.class)
-//class PointServiceUnitTest {
-//
-//    @Mock
-//    private PointRepository repository;
-//
-//    @InjectMocks
-//    private PointService pointService;
-//
-//    private Point createTestPoint(Long userRefId, int remainPoint) {
-//        return new Point(
-//                1L,
-//                userRefId,
-//                remainPoint
-//        );
-//    }
-//
-//    @Test
-//    void 잔액_조회_정상() {
-//        // given
-//        Long userRefId = 1L;
-//        Point point = createTestPoint(userRefId, 1000);
-//        when(repository.findByUserRefId(userRefId)).thenReturn(point);
-//
-//        // when
-//        Integer balance = pointService.getPoint(userRefId);
-//
-//        // then
-//        assertEquals(1000, balance);
-//    }
-//
-//    @Test
-//    void 잔액_조회_잘못된_ID() {
-//        assertThrows(IllegalArgumentException.class, () -> pointService.getPoint(0L));
-//        assertThrows(IllegalArgumentException.class, () -> pointService.getPoint(-1L));
-//    }
-//
-//    @Test
-//    void 포인트_충전_정상() {
-//        // given
-//        Long userRefId = 1L;
-//        Point point = createTestPoint(userRefId, 500);
-//        when(repository.findByUserRefId(userRefId)).thenReturn(point);
-//
-//        // when
-//        Integer newBalance = pointService.chargePoint(userRefId, 300);
-//
-//        // then
-//        assertEquals(800, newBalance);
-//        verify(repository).save(point);
-//    }
-//
-//    @Test
-//    void 포인트_충전_음수() {
-//        // given
-//        Long userRefId = 1L;
-//        Point point = spy(createTestPoint(userRefId, 500));
-//        when(repository.findByUserRefId(userRefId)).thenReturn(point);
-//
-//        // when
-//        Integer balance = pointService.chargePoint(userRefId, -100);
-//
-//        // then
-//        assertEquals(500, balance); // 변화 없음
-//        verify(point).charge(-100);
-//        verify(repository).save(point);
-//    }
-//
-//    @Test
-//    void 포인트_사용_정상() {
-//        // given
-//        Long userRefId = 1L;
-//        Point point = createTestPoint(userRefId, 500);
-//        when(repository.findByUserRefId(userRefId)).thenReturn(point);
-//
-//        // when
-//        Integer newBalance = pointService.usePoint(userRefId, 200);
-//
-//        // then
-//        assertEquals(300, newBalance);
-//        verify(repository).save(point);
-//    }
-//
-//    @Test
-//    void 포인트_사용_음수() {
-//        // given
-//        Long userRefId = 1L;
-//        Point point = spy(createTestPoint(userRefId, 500));
-//        when(repository.findByUserRefId(userRefId)).thenReturn(point);
-//
-//        // when
-//        Integer balance = pointService.usePoint(userRefId, -100);
-//
-//        // then
-//        assertEquals(500, balance); // 변화 없음
-//        verify(point).use(-100);
-//        verify(repository).save(point);
-//    }
-//
-//    @Test
-//    void 포인트_충전_또는_사용_잘못된_ID() {
-//        assertThrows(IllegalArgumentException.class, () -> pointService.chargePoint(null, 100));
-//        assertThrows(IllegalArgumentException.class, () -> pointService.chargePoint(0L, 100));
-//
-//        assertThrows(IllegalArgumentException.class, () -> pointService.usePoint(null, 100));
-//        assertThrows(IllegalArgumentException.class, () -> pointService.usePoint(-1L, 100));
-//    }
-//}
+package kr.hhplus.be.server.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Optional;
+
+import kr.hhplus.be.server.domain.point.Point;
+import kr.hhplus.be.server.domain.point.PointRepository;
+import kr.hhplus.be.server.domain.point.PointService;
+import kr.hhplus.be.server.domain.user.User;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+@ExtendWith(MockitoExtension.class)
+class PointServiceTest {
+
+    @Mock
+    private PointRepository pointRepository;
+
+    @InjectMocks
+    private PointService pointService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    private Point createPoint(Long userRefId, int remainPoint) {
+        Point point = new Point();
+        point.setUserRefId(userRefId);
+        point.setRemainPoint(remainPoint);
+        return point;
+    }
+
+    @Test
+    void getOrCreatePoint_returnsExistingPoint() {
+        // given
+        User user = new User();
+        user.setId(1L);
+        Point existing = createPoint(1L, 100);
+        when(pointRepository.findByUserRefId(1L)).thenReturn(Optional.of(existing));
+
+        // when
+        Point result = pointService.getOrCreatePoint(user);
+
+        // then
+        assertEquals(100, result.getRemainPoint());
+    }
+
+    @Test
+    void getOrCreatePoint_createsNewIfNotExist() {
+        // given
+        User user = new User();
+        user.setId(1L);
+        Point created = createPoint(1L, 0);
+        when(pointRepository.findByUserRefId(1L)).thenReturn(Optional.empty());
+        when(pointRepository.save(any())).thenReturn(created);
+
+        // when
+        Point result = pointService.getOrCreatePoint(user);
+
+        // then
+        assertEquals(0, result.getRemainPoint());
+        verify(pointRepository).save(any(Point.class));
+    }
+
+    @Test
+    void chargePoint_increasesBalance() {
+        // given
+        Long userRefId = 1L;
+        Point point = createPoint(userRefId, 200);
+        when(pointRepository.findByUserRefId(userRefId)).thenReturn(Optional.of(point));
+        when(pointRepository.save(point)).thenReturn(point);
+
+        // when
+        Point updated = pointService.chargePoint(userRefId, 100);
+
+        // then
+        assertEquals(300, updated.getRemainPoint());
+    }
+
+    @Test
+    void chargePoint_throwsIfUserNotFound() {
+        // given
+        Long userRefId = 99L;
+        when(pointRepository.findByUserRefId(userRefId)).thenReturn(Optional.empty());
+
+        // expect
+        assertThrows(IllegalArgumentException.class,
+                () -> pointService.chargePoint(userRefId, 100));
+    }
+
+    @Test
+    void getPointBalance_returnsCorrectBalance() {
+        // given
+        Long userRefId = 1L;
+        Point point = createPoint(userRefId, 400);
+        when(pointRepository.findByUserRefId(userRefId)).thenReturn(Optional.of(point));
+
+        // when
+        int balance = pointService.getPointBalance(userRefId);
+
+        // then
+        assertEquals(400, balance);
+    }
+
+    @Test
+    void getPointBalance_returnsZeroIfNotFound() {
+        // given
+        Long userRefId = 2L;
+        when(pointRepository.findByUserRefId(userRefId)).thenReturn(Optional.empty());
+
+        // when
+        int balance = pointService.getPointBalance(userRefId);
+
+        // then
+        assertEquals(0, balance);
+    }
+
+    @Test
+    void usePoints_decreasesBalance() {
+        // given
+        Long userRefId = 1L;
+        Point point = createPoint(userRefId, 500);
+        when(pointRepository.findByUserRefIdWithLock(userRefId)).thenReturn(Optional.of(point));
+        when(pointRepository.save(point)).thenReturn(point);
+
+        // when
+        Point result = pointService.usePoints(userRefId, 200);
+
+        // then
+        assertEquals(300, result.getRemainPoint());
+    }
+
+    @Test
+    void usePoints_throwsIfUserNotFound() {
+        // given
+        Long userRefId = 1L;
+        when(pointRepository.findByUserRefIdWithLock(userRefId)).thenReturn(Optional.empty());
+
+        // expect
+        assertThrows(IllegalStateException.class,
+                () -> pointService.usePoints(userRefId, 100));
+    }
+
+    @Test
+    void usePoints_throwsIfInsufficient() {
+        // given
+        Long userRefId = 1L;
+        Point point = createPoint(userRefId, 100);
+        when(pointRepository.findByUserRefIdWithLock(userRefId)).thenReturn(Optional.of(point));
+
+        // when & then
+        assertThrows(IllegalStateException.class, () -> pointService.usePoints(userRefId, 200));
+    }
+}
+

@@ -18,6 +18,11 @@ public class PointDomainRepository implements PointRepository {
     public Optional<Point> findByUserRefId(Long userRefId) {
         return repository.findByUserRefId(userRefId);
     }
+    
+    @Override
+    public Optional<Point> findByUserRefIdWithLock(Long userRefId) {
+        return repository.findByUserRefIdWithLock(userRefId);
+    }
 
     @Override
     public Point save(Point point) {

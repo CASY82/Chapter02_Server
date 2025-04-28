@@ -2,10 +2,6 @@ package kr.hhplus.be.server.facade;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -29,6 +25,7 @@ import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.reservation.ReservationStatus;
+import kr.hhplus.be.server.domain.reservationitem.ReservationItemService;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.presentation.api.v1.obj.PaymentResponse;
@@ -41,6 +38,7 @@ public class PaymentFacadeUnitTest {
     @Mock private OrderService orderService;
     @Mock private PointService pointService;
     @Mock private PaymentService paymentService;
+    @Mock private ReservationItemService reservationItemService;
 
     @InjectMocks
     private PaymentFacade paymentFacade;
@@ -65,9 +63,11 @@ public class PaymentFacadeUnitTest {
 
         order = new Order();
         order.setId(10L);
+        order.setUserRefId(1L);
         order.setTotalAmount(1000);
 
         point = new Point();
+        point.setUserRefId(1L);
         point.setRemainPoint(500);
 
         payment = new Payment();
@@ -80,14 +80,15 @@ public class PaymentFacadeUnitTest {
     void 결제_성공() {
         // given
         String userId = "user1";
-        Long reservationId = 1L;
+        Long reservationId = 100L;
 
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
-        when(pointService.usePoint(user.getId(), order.getTotalAmount())).thenReturn(point);
+        when(reservationItemService.calculateTotalAmount(reservation.getReservationId())).thenReturn(1000);
+        when(pointService.usePoints(user.getId(), order.getTotalAmount())).thenReturn(point);
         when(reservationService.completeReservation(reservationId)).thenReturn(reservation);
-        when(paymentService.createPayment(anyLong(), anyInt(), anyLong())).thenReturn(payment);
+        when(paymentService.processPayment(user.getId(), order.getTotalAmount())).thenReturn(payment);
         when(orderService.updatePaymentRefId(order.getId(), payment.getId())).thenReturn(order);
 
         // when
@@ -101,62 +102,113 @@ public class PaymentFacadeUnitTest {
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
         verify(orderService).getOrder(reservation.getOrderRefId());
-        verify(pointService).usePoint(user.getId(), order.getTotalAmount());
+        verify(reservationItemService).calculateTotalAmount(reservation.getReservationId());
+        verify(pointService).usePoints(user.getId(), order.getTotalAmount());
         verify(reservationService).completeReservation(reservationId);
-        when(paymentService.createPayment(eq(user.getId()), eq(order.getTotalAmount()), anyLong()))
-        .thenReturn(payment);
+        verify(paymentService).processPayment(user.getId(), order.getTotalAmount());
         verify(orderService).updatePaymentRefId(order.getId(), payment.getId());
+        verifyNoMoreInteractions(userService, reservationService, orderService, pointService, paymentService, reservationItemService);
     }
 
     @Test
-    @DisplayName("예약이 사용자 소유가 아니면 예외를 던진다")
-    void 예약_소유자_불일치_IllegalArgumentException예외() {
+    @DisplayName("예약이 사용자 소유가 아니면 IllegalArgumentException을 던진다")
+    void 예약_소유자_불일치_IllegalArgumentException() {
         // given
         String userId = "user1";
-        Long reservationId = 1L;
+        Long reservationId = 100L;
 
-        User differentUser = new User();
-        differentUser.setId(2L); // 다른 사용자
-
-        reservation.setUserRefId(2L); // 예약은 다른 사용자의 것
+        reservation.setUserRefId(2L); // 다른 사용자의 예약
 
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-            paymentFacade.payReservation(userId, reservationId));
+                paymentFacade.payReservation(userId, reservationId));
 
-        assertThat(exception.getMessage()).isEqualTo("Reservation does not belong to user");
+        assertThat(exception.getMessage()).isEqualTo("Reservation does not belong to user: " + userId);
 
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
-        verifyNoInteractions(orderService, pointService, paymentService);
+        verifyNoInteractions(orderService, pointService, paymentService, reservationItemService);
     }
 
     @Test
-    @DisplayName("포인트 부족 시 예외를 던진다")
-    void 포인트_부족_RuntimeException예외() {
+    @DisplayName("주문이 사용자 소유가 아니면 IllegalArgumentException을 던진다")
+    void 주문_소유자_불일치_IllegalArgumentException() {
         // given
         String userId = "user1";
-        Long reservationId = 1L;
+        Long reservationId = 100L;
+
+        order.setUserRefId(2L); // 다른 사용자의 주문
 
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
-        when(pointService.usePoint(user.getId(), order.getTotalAmount()))
-            .thenThrow(new RuntimeException("Insufficient points"));
+
+        // when & then
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                paymentFacade.payReservation(userId, reservationId));
+
+        assertThat(exception.getMessage()).isEqualTo("Order does not belong to user: " + userId);
+
+        verify(userService).getUser(userId);
+        verify(reservationService).getReservation(reservationId);
+        verify(orderService).getOrder(reservation.getOrderRefId());
+        verifyNoInteractions(pointService, paymentService, reservationItemService);
+    }
+
+    @Test
+    @DisplayName("Order.totalAmount와 ReservationItem 합계가 다르면 IllegalStateException을 던진다")
+    void 금액_불일치_IllegalStateException() {
+        // given
+        String userId = "user1";
+        Long reservationId = 100L;
+
+        when(userService.getUser(userId)).thenReturn(user);
+        when(reservationService.getReservation(reservationId)).thenReturn(reservation);
+        when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
+        when(reservationItemService.calculateTotalAmount(reservation.getReservationId())).thenReturn(2000); // 다른 금액
+
+        // when & then
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
+                paymentFacade.payReservation(userId, reservationId));
+
+        assertThat(exception.getMessage()).isEqualTo("Order total amount does not match ReservationItem total: " + reservationId);
+
+        verify(userService).getUser(userId);
+        verify(reservationService).getReservation(reservationId);
+        verify(orderService).getOrder(reservation.getOrderRefId());
+        verify(reservationItemService).calculateTotalAmount(reservation.getReservationId());
+        verifyNoInteractions(pointService, paymentService);
+    }
+
+    @Test
+    @DisplayName("포인트 부족 시 RuntimeException을 던진다")
+    void 포인트_부족_RuntimeException() {
+        // given
+        String userId = "user1";
+        Long reservationId = 100L;
+
+        when(userService.getUser(userId)).thenReturn(user);
+        when(reservationService.getReservation(reservationId)).thenReturn(reservation);
+        when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
+        when(reservationItemService.calculateTotalAmount(reservation.getReservationId())).thenReturn(1000);
+        when(pointService.usePoints(user.getId(), order.getTotalAmount()))
+                .thenThrow(new RuntimeException("Insufficient points"));
 
         // when & then
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-            paymentFacade.payReservation(userId, reservationId));
+                paymentFacade.payReservation(userId, reservationId));
 
         assertThat(exception.getMessage()).isEqualTo("Insufficient points");
 
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
         verify(orderService).getOrder(reservation.getOrderRefId());
-        verify(pointService).usePoint(user.getId(), order.getTotalAmount());
-        verifyNoMoreInteractions(reservationService, paymentService, orderService);
+        verify(reservationItemService).calculateTotalAmount(reservation.getReservationId());
+        verify(pointService).usePoints(user.getId(), order.getTotalAmount());
+        verifyNoInteractions(paymentService);
+        verifyNoMoreInteractions(reservationService, orderService);
     }
 }

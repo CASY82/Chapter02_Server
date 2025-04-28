@@ -4,14 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.domain.performance.PerformanceService;
-import kr.hhplus.be.server.domain.reservation.Reservation;
-import kr.hhplus.be.server.domain.reservation.ReservationService;
-import kr.hhplus.be.server.domain.reservation.ReservationStatus;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
-import kr.hhplus.be.server.domain.seat.SeatService;
 import lombok.RequiredArgsConstructor;
 
 @Component
