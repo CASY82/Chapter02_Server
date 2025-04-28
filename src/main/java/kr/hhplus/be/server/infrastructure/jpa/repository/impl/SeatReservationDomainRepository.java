@@ -17,7 +17,7 @@ public class SeatReservationDomainRepository implements SeatReservationRepositor
     private final SeatReservationJpaRepository repository;
 
     @Override
-    public List<SeatReservation> findByScheduleIdAndNotCancelled(Long scheduleId) {
-        return repository.findByScheduleIdAndNotCancelled(scheduleId, ReservationStatus.CANCEL);
+    public List<SeatReservation> findByScheduleIdAndNotCancelled() {
+        return repository.findCancleSeatReservations(ReservationStatus.CANCEL);
     }
 }
