@@ -31,7 +31,7 @@ public class SeatReservationFacade {
                 .collect(Collectors.toList());
 
         // 예약된 좌석 조회 (reservation_status != CANCELLED)
-        List<SeatReservation> reservedSeats = seatReservationRepository.findByScheduleIdAndNotCancelled(scheduleId);
+        List<SeatReservation> reservedSeats = seatReservationRepository.findByScheduleIdAndNotCancelled();
         List<Long> reservedSeatIds = reservedSeats.stream()
                 .map(SeatReservation::getSeatRefId)
                 .collect(Collectors.toList());
