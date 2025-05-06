@@ -15,7 +15,7 @@ import java.util.Optional;
 public interface TokenJpaRepository extends JpaRepository<Token, Long> {
     Optional<Token> findByTokenValue(String tokenValue);
     
-    @Query("SELECT t FROM Token t WHERE t.userRefId = :userRefId")
+    @Query("SELECT t FROM Token t WHERE t.user.id = :userRefId")
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "javax.persistence.lock.timeout", value = "5000")})
     Optional<Token> findByUserRefIdWithLock(@Param("userRefId") Long userRefId);
