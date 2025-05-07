@@ -2,17 +2,14 @@ package kr.hhplus.be.server.facade;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
-import kr.hhplus.be.server.application.facade.ReservationFacade;
-import kr.hhplus.be.server.domain.performance.Performance;
-import kr.hhplus.be.server.domain.performance.PerformanceService;
-import kr.hhplus.be.server.domain.schedule.Schedule;
-import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +17,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import kr.hhplus.be.server.application.facade.ReservationFacade;
+import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
+import kr.hhplus.be.server.application.obj.ReservationCheckResult;
+import kr.hhplus.be.server.domain.performance.Performance;
+import kr.hhplus.be.server.domain.performance.PerformanceService;
+import kr.hhplus.be.server.domain.schedule.Schedule;
+import kr.hhplus.be.server.domain.schedule.ScheduleService;
 
 @ExtendWith(MockitoExtension.class)
 public class ReservationFacadeUnitTest {
@@ -67,23 +72,26 @@ public class ReservationFacadeUnitTest {
     @DisplayName("공연이 존재하면 예약 가능 일정을 반환한다")
     void 예약_가능_일정_조회_성공() {
         // given
+    	ReservationCheckCommand command = new ReservationCheckCommand();
         Long performanceId = 1L;
+        
+        command.setPerformanceId(performanceId);
 
         when(performanceService.getPerformance(performanceId)).thenReturn(performance);
         when(scheduleService.getAvailableSchedules(performanceId)).thenReturn(schedules);
 
         // when
-        List<Schedule> result = reservationFacade.getAvailableSchedules(performanceId);
+        ReservationCheckResult result = reservationFacade.getAvailableSchedules(command);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getPerformanceRefId()).isEqualTo(performanceId);
-        assertThat(result.get(0).getScheduleId()).isEqualTo(101L);
-        assertThat(result.get(0).getVenueRefId()).isEqualTo(201L);
-        assertThat(result.get(1).getPerformanceRefId()).isEqualTo(performanceId);
-        assertThat(result.get(1).getScheduleId()).isEqualTo(102L);
-        assertThat(result.get(1).getVenueRefId()).isEqualTo(201L);
+        assertThat(result.getScheduleList()).isNotNull();
+        assertThat(result.getScheduleList()).hasSize(2);
+        assertThat(result.getScheduleList().get(0).getPerformanceRefId()).isEqualTo(performanceId);
+        assertThat(result.getScheduleList().get(0).getScheduleId()).isEqualTo(101L);
+        assertThat(result.getScheduleList().get(0).getVenueRefId()).isEqualTo(201L);
+        assertThat(result.getScheduleList().get(1).getPerformanceRefId()).isEqualTo(performanceId);
+        assertThat(result.getScheduleList()).isEqualTo(102L);
+        assertThat(result.getScheduleList()).isEqualTo(201L);
 
         verify(performanceService).getPerformance(performanceId);
         verify(scheduleService).getAvailableSchedules(performanceId);
@@ -93,14 +101,17 @@ public class ReservationFacadeUnitTest {
     @DisplayName("공연이 존재하지 않으면 예외를 던진다")
     void 공연_없음_예외() {
         // given
+    	ReservationCheckCommand command = new ReservationCheckCommand();
         Long performanceId = 999L;
+        
+        command.setPerformanceId(performanceId);
 
         when(performanceService.getPerformance(performanceId))
             .thenThrow(new RuntimeException("Performance not found"));
 
         // when & then
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-            reservationFacade.getAvailableSchedules(performanceId));
+            reservationFacade.getAvailableSchedules(command));
 
         assertThat(exception.getMessage()).isEqualTo("Performance not found");
 
@@ -112,17 +123,20 @@ public class ReservationFacadeUnitTest {
     @DisplayName("예약 가능 일정이 없으면 빈 리스트를 반환한다")
     void 예약_가능_일정_없음() {
         // given
+    	ReservationCheckCommand command = new ReservationCheckCommand();
         Long performanceId = 1L;
+        
+        command.setPerformanceId(performanceId);
 
         when(performanceService.getPerformance(performanceId)).thenReturn(performance);
         when(scheduleService.getAvailableSchedules(performanceId)).thenReturn(Arrays.asList());
 
         // when
-        List<Schedule> result = reservationFacade.getAvailableSchedules(performanceId);
+        ReservationCheckResult result = reservationFacade.getAvailableSchedules(command);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result).isEmpty();
+        assertThat(result.getScheduleList()).isNotNull();
+        assertThat(result.getScheduleList()).isEmpty();
 
         verify(performanceService).getPerformance(performanceId);
         verify(scheduleService).getAvailableSchedules(performanceId);

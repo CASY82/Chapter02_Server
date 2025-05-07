@@ -1,12 +1,17 @@
 package kr.hhplus.be.server.domain.seatreservation;
 
-import jakarta.persistence.*;
+import java.time.Instant;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import kr.hhplus.be.server.domain.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -29,5 +34,5 @@ public class SeatReservation extends BaseEntity {
     private Boolean reserved;
 
     @Column(name = "reserved_at")
-    private LocalDateTime reservedAt;
+    private Instant reservedAt;
 }

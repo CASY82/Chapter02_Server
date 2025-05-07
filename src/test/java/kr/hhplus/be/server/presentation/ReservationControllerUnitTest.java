@@ -21,6 +21,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import kr.hhplus.be.server.application.facade.ReservationFacade;
 import kr.hhplus.be.server.application.facade.SeatReservationFacade;
+import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
+import kr.hhplus.be.server.application.obj.ReservationCheckResult;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.presentation.api.v1.reserve.ReservationController;
 
@@ -47,8 +49,14 @@ class ReservationControllerUnitTest {
 
     @Test
     void 좌석_조회_정상_케이스() throws Exception {
-        when(seatReservationFacade.getAvailableSeatIds(1L))
-                .thenReturn(List.of(101L, 102L));
+    	ReservationCheckCommand command = new ReservationCheckCommand();
+    	command.setScheduleId(1L);
+    	
+    	ReservationCheckResult result = new ReservationCheckResult();
+    	result.setSeatIds(List.of(101L, 102L));
+    	
+        when(seatReservationFacade.getAvailableSeatIds(command))
+                .thenReturn(result);
 
         mockMvc.perform(get("/reservations/available/seat")
                         .param("scheduleId", "1")
@@ -57,7 +65,7 @@ class ReservationControllerUnitTest {
                 .andExpect(jsonPath("$.seatIds[0]").value(101))
                 .andExpect(jsonPath("$.seatIds[1]").value(102));
 
-        verify(seatReservationFacade, times(1)).getAvailableSeatIds(1L);
+        verify(seatReservationFacade, times(1)).getAvailableSeatIds(command);
     }
 
     @Test
@@ -70,6 +78,11 @@ class ReservationControllerUnitTest {
 
     @Test
     void 스케줄_조회_정상_케이스() throws Exception {
+    	ReservationCheckCommand command = new ReservationCheckCommand();
+    	command.setScheduleId(1L);
+    	
+    	ReservationCheckResult result = new ReservationCheckResult();
+    	
         Schedule schedule1 = new Schedule(
                 1L,
                 201L,
@@ -84,9 +97,11 @@ class ReservationControllerUnitTest {
                 1L,
                 Instant.parse("2025-04-21T00:00:00Z")
         );
+        
+        result.setScheduleList(List.of(schedule1, schedule2));
 
-        when(reservationFacade.getAvailableSchedules(1L))
-                .thenReturn(List.of(schedule1, schedule2));
+        when(reservationFacade.getAvailableSchedules(command))
+                .thenReturn(result);
 
         mockMvc.perform(get("/reservations/available/schedule")
                         .param("performanceId", "1")
@@ -97,7 +112,7 @@ class ReservationControllerUnitTest {
                 .andExpect(jsonPath("$.schedules[1].scheduleId").value(202))
                 .andExpect(jsonPath("$.schedules[1].scheduleDateTime").value("2025-04-21T00:00:00Z"));
 
-        verify(reservationFacade, times(1)).getAvailableSchedules(1L);
+        verify(reservationFacade, times(1)).getAvailableSchedules(command);
     }
     
     @Test

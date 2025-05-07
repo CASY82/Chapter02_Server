@@ -14,6 +14,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import kr.hhplus.be.server.application.facade.PaymentFacade;
+import kr.hhplus.be.server.application.obj.PaymentCommand;
+import kr.hhplus.be.server.application.obj.PaymentResult;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -29,7 +31,6 @@ import kr.hhplus.be.server.domain.seat.Seat;
 import kr.hhplus.be.server.domain.seat.SeatRepository;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
-import kr.hhplus.be.server.presentation.api.v1.obj.PaymentResponse;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -116,16 +117,22 @@ public class PaymentFacadeIntegrationTest {
         item.setUnitPrice(5000);
         item.setTotalAmount(5000);
         reservationItemRepository.save(item);
+        
+       
     }
 
     @Test
     void 결제_정상_동작_테스트() {
         // when
-        PaymentResponse response = paymentFacade.payReservation(user.getUserId(), reservationId);
+    	PaymentCommand command = new PaymentCommand();
+        command.setReservationId(reservationId);
+        command.setUserId(user.getUserId());
+         
+        PaymentResult result = paymentFacade.pay(command);
 
         // then
-        assertEquals("PAID", response.getPaymentStatus());
-        assertEquals(5000L, response.getRemainPoint());
+        assertEquals("PAID", result.getPaymentStatus());
+        assertEquals(5000L, result.getRemainPoint());
 
         Reservation updatedReservation = reservationRepository.findById(reservationId).orElseThrow();
         assertEquals(ReservationStatus.COMPLETED, updatedReservation.getReserveStatus());
@@ -143,33 +150,45 @@ public class PaymentFacadeIntegrationTest {
         hacker.setUsername("h4ck3r");
         hacker.setPassword("1234");
         userRepository.save(hacker);
+        
+        PaymentCommand command = new PaymentCommand();
+        command.setReservationId(reservationId);
+        command.setUserId(hacker.getUserId());
 
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () ->
-            paymentFacade.payReservation(hacker.getUserId(), reservationId)
+            paymentFacade.pay(command)
         );
         assertTrue(e.getMessage().contains("Reservation does not belong"));
     }
 
     @Test
     void 포인트_부족_예외() {
+    	PaymentCommand command = new PaymentCommand();
+        command.setReservationId(reservationId);
+        command.setUserId(user.getUserId());
+    	
         pointRepository.findByUserRefId(user.getId()).ifPresent(p -> {
             p.setRemainPoint(100);
             pointRepository.save(p);
         });
-
+        
         IllegalStateException e = assertThrows(IllegalStateException.class, () ->
-            paymentFacade.payReservation(user.getUserId(), reservationId)
+            paymentFacade.pay(command)
         );
         assertTrue(e.getMessage().contains("Insufficient points"));
     }
 
     @Test
     void 총액_불일치_예외() {
+    	PaymentCommand command = new PaymentCommand();
+        command.setReservationId(reservationId);
+        command.setUserId(user.getUserId());
+    	
         order.setTotalAmount(9999);
         orderRepository.save(order);
 
         IllegalStateException e = assertThrows(IllegalStateException.class, () ->
-            paymentFacade.payReservation(user.getUserId(), reservationId)
+            paymentFacade.pay(command)
         );
         assertTrue(e.getMessage().contains("does not match ReservationItem total"));
     }

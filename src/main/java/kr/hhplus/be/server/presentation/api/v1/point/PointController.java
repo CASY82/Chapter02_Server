@@ -1,6 +1,8 @@
 package kr.hhplus.be.server.presentation.api.v1.point;
 
 import kr.hhplus.be.server.application.facade.PointFacade;
+import kr.hhplus.be.server.application.obj.PointCommand;
+import kr.hhplus.be.server.application.obj.PointResult;
 import kr.hhplus.be.server.presentation.api.v1.obj.PointChargeRequest;
 import kr.hhplus.be.server.presentation.api.v1.obj.PointChargeResponse;
 import kr.hhplus.be.server.presentation.api.v1.obj.PointBalanceResponse;
@@ -23,14 +25,16 @@ public class PointController {
     @PostMapping("/points/charge")
     public ResponseEntity<PointChargeResponse> chargePoints(
             @RequestBody @Validated PointChargeRequest request) {
+    	PointCommand command = new PointCommand();
+    	
+    	command.setUserId(request.getUserId());
+    	command.setAmount(request.getAmount());
+    	
         try {
-            Long remainPoint = pointFacade.chargePoints(
-                    request.getUserId(),
-                    request.getAmount()
-            );
+            PointResult result = pointFacade.chargePoints(command);
 
             PointChargeResponse response = new PointChargeResponse();
-            response.setRemainPoint(remainPoint);
+            response.setRemainPoint(result.getRemainPoint());
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
@@ -44,11 +48,15 @@ public class PointController {
     @GetMapping("/points/balance")
     public ResponseEntity<PointBalanceResponse> getPointBalance(
             @RequestParam @NotBlank(message = "User ID must not be blank") String userId) {
+    	PointCommand command = new PointCommand();
+    	
+    	command.setUserId(userId);
+    	
         try {
-            Long remainPoint = pointFacade.getPointBalance(userId);
+            PointResult result = pointFacade.getPointBalance(command);
 
             PointBalanceResponse response = new PointBalanceResponse();
-            response.setRemainPoint(remainPoint);
+            response.setRemainPoint(result.getRemainPoint());
 
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {

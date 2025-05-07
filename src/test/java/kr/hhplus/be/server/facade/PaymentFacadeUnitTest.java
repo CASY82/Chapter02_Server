@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import kr.hhplus.be.server.application.facade.PaymentFacade;
+import kr.hhplus.be.server.application.obj.PaymentCommand;
+import kr.hhplus.be.server.application.obj.PaymentResult;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -28,7 +30,6 @@ import kr.hhplus.be.server.domain.reservation.ReservationStatus;
 import kr.hhplus.be.server.domain.reservationitem.ReservationItemService;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
-import kr.hhplus.be.server.presentation.api.v1.obj.PaymentResponse;
 
 @ExtendWith(MockitoExtension.class)
 public class PaymentFacadeUnitTest {
@@ -79,8 +80,12 @@ public class PaymentFacadeUnitTest {
     @DisplayName("결제 성공 시 PaymentResponse를 반환한다")
     void 결제_성공() {
         // given
+    	PaymentCommand command = new PaymentCommand();
         String userId = "user1";
         Long reservationId = 100L;
+        
+        command.setUserId(userId);
+        command.setReservationId(reservationId);
 
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
@@ -92,12 +97,12 @@ public class PaymentFacadeUnitTest {
         when(orderService.updatePaymentRefId(order.getId(), payment.getId())).thenReturn(order);
 
         // when
-        PaymentResponse response = paymentFacade.payReservation(userId, reservationId);
+        PaymentResult result = paymentFacade.pay(command);
 
         // then
-        assertThat(response).isNotNull();
-        assertThat(response.getPaymentStatus()).isEqualTo("SUCCESS");
-        assertThat(response.getRemainPoint()).isEqualTo(500L);
+        assertThat(result).isNotNull();
+        assertThat(result.getPaymentStatus()).isEqualTo("SUCCESS");
+        assertThat(result.getRemainPoint()).isEqualTo(500L);
 
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
@@ -114,8 +119,12 @@ public class PaymentFacadeUnitTest {
     @DisplayName("예약이 사용자 소유가 아니면 IllegalArgumentException을 던진다")
     void 예약_소유자_불일치_IllegalArgumentException() {
         // given
+    	PaymentCommand command = new PaymentCommand();
         String userId = "user1";
         Long reservationId = 100L;
+        
+        command.setUserId(userId);
+        command.setReservationId(reservationId);
 
         reservation.setUserRefId(2L); // 다른 사용자의 예약
 
@@ -124,7 +133,7 @@ public class PaymentFacadeUnitTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                paymentFacade.payReservation(userId, reservationId));
+                paymentFacade.pay(command));
 
         assertThat(exception.getMessage()).isEqualTo("Reservation does not belong to user: " + userId);
 
@@ -137,8 +146,12 @@ public class PaymentFacadeUnitTest {
     @DisplayName("주문이 사용자 소유가 아니면 IllegalArgumentException을 던진다")
     void 주문_소유자_불일치_IllegalArgumentException() {
         // given
+    	PaymentCommand command = new PaymentCommand();
         String userId = "user1";
         Long reservationId = 100L;
+        
+        command.setUserId(userId);
+        command.setReservationId(reservationId);
 
         order.setUserRefId(2L); // 다른 사용자의 주문
 
@@ -148,7 +161,7 @@ public class PaymentFacadeUnitTest {
 
         // when & then
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                paymentFacade.payReservation(userId, reservationId));
+                paymentFacade.pay(command));
 
         assertThat(exception.getMessage()).isEqualTo("Order does not belong to user: " + userId);
 
@@ -162,8 +175,12 @@ public class PaymentFacadeUnitTest {
     @DisplayName("Order.totalAmount와 ReservationItem 합계가 다르면 IllegalStateException을 던진다")
     void 금액_불일치_IllegalStateException() {
         // given
+    	PaymentCommand command = new PaymentCommand();
         String userId = "user1";
         Long reservationId = 100L;
+        
+        command.setUserId(userId);
+        command.setReservationId(reservationId);
 
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
@@ -172,7 +189,7 @@ public class PaymentFacadeUnitTest {
 
         // when & then
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
-                paymentFacade.payReservation(userId, reservationId));
+                paymentFacade.pay(command));
 
         assertThat(exception.getMessage()).isEqualTo("Order total amount does not match ReservationItem total: " + reservationId);
 
@@ -187,8 +204,12 @@ public class PaymentFacadeUnitTest {
     @DisplayName("포인트 부족 시 RuntimeException을 던진다")
     void 포인트_부족_RuntimeException() {
         // given
+    	PaymentCommand command = new PaymentCommand();
         String userId = "user1";
         Long reservationId = 100L;
+        
+        command.setUserId(userId);
+        command.setReservationId(reservationId);
 
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
@@ -199,7 +220,7 @@ public class PaymentFacadeUnitTest {
 
         // when & then
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                paymentFacade.payReservation(userId, reservationId));
+                paymentFacade.pay(command));
 
         assertThat(exception.getMessage()).isEqualTo("Insufficient points");
 

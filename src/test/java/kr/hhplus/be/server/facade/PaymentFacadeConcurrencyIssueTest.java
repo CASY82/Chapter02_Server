@@ -1,6 +1,22 @@
 package kr.hhplus.be.server.facade;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
+
 import kr.hhplus.be.server.application.facade.PaymentFacade;
+import kr.hhplus.be.server.application.obj.PaymentCommand;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderRepository;
 import kr.hhplus.be.server.domain.payment.Payment;
@@ -14,21 +30,6 @@ import kr.hhplus.be.server.domain.reservationitem.ReservationItemService;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserRepository;
 import kr.hhplus.be.server.infrastructure.jpa.repository.PaymentJpaRepository;
-import kr.hhplus.be.server.presentation.api.v1.obj.PaymentResponse;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -92,6 +93,10 @@ public class PaymentFacadeConcurrencyIssueTest {
         point.setUserRefId(user.getId());
         point.setRemainPoint(2000); // 충분한 포인트
         pointRepository.save(point);
+        
+        PaymentCommand command = new PaymentCommand();
+        command.setUserId(userId);
+        command.setReservationId(reservationId);
 
         // Mock 설정
         when(reservationItemService.calculateTotalAmount(reservationId)).thenReturn(1000);
@@ -100,7 +105,7 @@ public class PaymentFacadeConcurrencyIssueTest {
         for (int i = 0; i < numberOfThreads; i++) {
             executorService.submit(() -> {
                 try {
-                    paymentFacade.payReservation(userId, reservationId);
+                    paymentFacade.pay(command);
                 } catch (Exception e) {
                     // 동시성 예외는 무시 (단일 성공 확인이 목표)
                 } finally {

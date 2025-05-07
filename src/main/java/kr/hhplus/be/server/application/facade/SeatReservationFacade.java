@@ -1,5 +1,7 @@
 package kr.hhplus.be.server.application.facade;
 
+import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
+import kr.hhplus.be.server.application.obj.ReservationCheckResult;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.Seat;
@@ -12,6 +14,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * 좌석-예약 테이블용 파사드
+ * 1. 예약 가능 좌석 확인
+ */
 @Component
 @RequiredArgsConstructor
 public class SeatReservationFacade {
@@ -19,9 +25,11 @@ public class SeatReservationFacade {
     private final SeatReservationRepository seatReservationRepository;
     private final ScheduleService scheduleService;
 
-    public List<Long> getAvailableSeatIds(Long scheduleId) {
+    public ReservationCheckResult getAvailableSeatIds(ReservationCheckCommand command) {
+    	ReservationCheckResult result = new ReservationCheckResult();
+    	
         // 일정 확인 및 공연장 ID 조회
-        Schedule schedule = scheduleService.getSchedule(scheduleId);
+        Schedule schedule = scheduleService.getSchedule(command.getScheduleId());
         Long venueRefId = schedule.getVenueRefId();
 
         // 공연장의 전체 좌석 조회
@@ -35,10 +43,12 @@ public class SeatReservationFacade {
         List<Long> reservedSeatIds = reservedSeats.stream()
                 .map(SeatReservation::getSeatRefId)
                 .collect(Collectors.toList());
-
+        
         // 가용 좌석 필터링
-        return seatIds.stream()
+        result.setSeatIds(seatIds.stream()
                 .filter(seatId -> !reservedSeatIds.contains(seatId))
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
+       
+        return result;
     }
 }
