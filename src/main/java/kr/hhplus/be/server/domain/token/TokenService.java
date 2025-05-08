@@ -26,17 +26,14 @@ public class TokenService {
 
     @Transactional
     public Token issueToken(Long userRefId) {
-        // 기존 토큰 확인, 비관적 락 적용
         Token existingToken = tokenRepository.findByUserRefIdWithLock(userRefId)
                 .filter(Token::isValid)
                 .orElse(null);
 
         if (existingToken != null) {
-            // 멱등성: 유효한 기존 토큰 반환
             return existingToken;
         }
 
-        // 신규 토큰 생성
         String tokenValue = generateJwt(userRefId);
         Token token = Token.create(userRefId, tokenValue);
         return tokenRepository.save(token);
@@ -55,18 +52,20 @@ public class TokenService {
         }
     }
 
-    public QueueStatusResponse getQueueStatus(String authorization) {
-        // JWT에서 userRefId 추출
-        String tokenValue = authorization.startsWith("Bearer ") ? authorization.substring(7) : authorization;
-        Claims claims;
+    public Long getUserRefIdFromToken(String tokenValue) {
         try {
-            claims = Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(tokenValue).getBody();
+            Claims claims = Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(tokenValue).getBody();
+            return Long.valueOf(claims.getSubject());
         } catch (JwtException e) {
-            return new QueueStatusResponse(-1, false, "Invalid JWT token: " + e.getMessage());
+            throw new IllegalArgumentException("Invalid JWT token: " + e.getMessage());
         }
+    }
+
+    public QueueStatusResponse getQueueStatus(String authorization) {
+        String tokenValue = authorization.startsWith("Bearer ") ? authorization.substring(7) : authorization;
+        Claims claims = Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(tokenValue).getBody();
         Long userRefId = Long.valueOf(claims.getSubject());
 
-        // 대기열 상태 확인
         int position = queueStore.getPosition(userRefId);
         boolean enterable = queueStore.isNowEnterable(userRefId, maxEnterable);
 

@@ -1,14 +1,10 @@
 package kr.hhplus.be.server.domain.order;
 
 
-import lombok.RequiredArgsConstructor;
-
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
-import kr.hhplus.be.server.domain.orderitem.OrderItem;
 import kr.hhplus.be.server.domain.orderitem.OrderItemService;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +27,9 @@ public class OrderService {
         order.setPaymentRefId(paymentId);
         order.setOrderStatus("PAID");
         return orderRepository.save(order);
+    }
+    
+    public void save(Order obj) {
+    	this.orderRepository.save(obj);
     }
 }

@@ -13,9 +13,9 @@ import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
-import kr.hhplus.be.server.domain.reservationitem.ReservationItemService;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -32,6 +32,7 @@ public class PaymentFacade {
     private final PaymentService paymentService;
 
     @Transactional
+    @DistributedLock(key = "payLock", waitTime = 5, leaseTime = 3)
     public PaymentResult pay(PaymentCommand command) {
         // 사용자 확인
         User user = userService.getUser(command.getUserId());
