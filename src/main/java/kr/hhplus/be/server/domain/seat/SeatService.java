@@ -13,4 +13,8 @@ public class SeatService {
     public List<Seat> getSeatsByVenue(Long venueRefId) {
         return seatRepository.findByVenueRefId(venueRefId);
     }
+    
+    public void save(Seat obj) {
+    	seatRepository.save(obj);
+    }
 }
