@@ -2,10 +2,8 @@ package kr.hhplus.be.server.infrastructure.queue.impl;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import org.springframework.stereotype.Component;
-
 import kr.hhplus.be.server.infrastructure.queue.QueueStore;
+import org.springframework.stereotype.Component;
 
 @Component
 public class InMemoryQueueStore implements QueueStore {
@@ -38,5 +36,10 @@ public class InMemoryQueueStore implements QueueStore {
     @Override
     public boolean isNowEnterable(Long userId, int threshold) {
         return getPosition(userId) <= threshold;
+    }
+
+    @Override
+    public ConcurrentLinkedQueue<Long> getQueue() {
+        return (ConcurrentLinkedQueue<Long>) queue; // queue 반환
     }
 }
