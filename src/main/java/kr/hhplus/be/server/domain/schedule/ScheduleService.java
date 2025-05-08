@@ -17,4 +17,8 @@ public class ScheduleService {
     public Schedule getSchedule(Long scheduleId) {
         return scheduleRepository.findById(scheduleId);
     }
+    
+    public void save(Schedule obj) {
+    	scheduleRepository.save(obj);
+    }
 }

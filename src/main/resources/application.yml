@@ -31,3 +31,9 @@ spring:
     url: jdbc:mysql://192.168.152.120:3306/mydb?characterEncoding=UTF-8&serverTimezone=UTC
     username: myuser
     password: mypassword
+  data:
+    redis:
+      host: localhost
+      timeout: 2000ms
+      password:
+      port: 6379

@@ -46,4 +46,8 @@ public class PointService {
 
         return pointRepository.save(point);
     }
+    
+    public void save(Point obj) {
+    	pointRepository.save(obj);
+    }
 }
