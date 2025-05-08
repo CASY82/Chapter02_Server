@@ -102,7 +102,6 @@ public class PaymentFacadeIntegrationTest {
         reservation = new Reservation();
         reservation.setUserRefId(user.getId());
         reservation.setOrderRefId(order.getId());
-        reservation.setSeatRefId(seat.getSeatId());
         reservation.setScheduleRefId(10L); // 테스트용 임의의 스케줄
         reservation.setReserveStatus(ReservationStatus.READY);
         reservationRepository.save(reservation);
@@ -113,9 +112,7 @@ public class PaymentFacadeIntegrationTest {
         item.setReservation(reservation);
         item.setSeatRefId(seat.getSeatId());
         item.setScheduleRefId(10L);
-        item.setQuantity(1);
         item.setUnitPrice(5000);
-        item.setTotalAmount(5000);
         reservationItemRepository.save(item);
         
        

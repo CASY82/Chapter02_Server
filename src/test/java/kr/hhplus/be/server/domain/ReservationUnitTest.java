@@ -21,7 +21,6 @@ public class ReservationUnitTest {
         reservation.setReservationId(100L);
         reservation.setUserRefId(1L);
         reservation.setOrderRefId(1L);
-        reservation.setSeatRefId(1L);
         reservation.setScheduleRefId(1L);
         reservation.setReserveStatus(ReservationStatus.READY);
         reservation.setReservationItems(new ArrayList<>());

@@ -90,7 +90,6 @@ public class PaymentFacadeUnitTest {
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
-        when(reservationItemService.calculateTotalAmount(reservation.getReservationId())).thenReturn(1000);
         when(pointService.usePoints(user.getId(), order.getTotalAmount())).thenReturn(point);
         when(reservationService.completeReservation(reservationId)).thenReturn(reservation);
         when(paymentService.processPayment(user.getId(), order.getTotalAmount())).thenReturn(payment);
@@ -107,7 +106,6 @@ public class PaymentFacadeUnitTest {
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
         verify(orderService).getOrder(reservation.getOrderRefId());
-        verify(reservationItemService).calculateTotalAmount(reservation.getReservationId());
         verify(pointService).usePoints(user.getId(), order.getTotalAmount());
         verify(reservationService).completeReservation(reservationId);
         verify(paymentService).processPayment(user.getId(), order.getTotalAmount());
@@ -185,7 +183,6 @@ public class PaymentFacadeUnitTest {
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
-        when(reservationItemService.calculateTotalAmount(reservation.getReservationId())).thenReturn(2000); // 다른 금액
 
         // when & then
         IllegalStateException exception = assertThrows(IllegalStateException.class, () ->
@@ -196,7 +193,6 @@ public class PaymentFacadeUnitTest {
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
         verify(orderService).getOrder(reservation.getOrderRefId());
-        verify(reservationItemService).calculateTotalAmount(reservation.getReservationId());
         verifyNoInteractions(pointService, paymentService);
     }
 
@@ -214,7 +210,6 @@ public class PaymentFacadeUnitTest {
         when(userService.getUser(userId)).thenReturn(user);
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
-        when(reservationItemService.calculateTotalAmount(reservation.getReservationId())).thenReturn(1000);
         when(pointService.usePoints(user.getId(), order.getTotalAmount()))
                 .thenThrow(new RuntimeException("Insufficient points"));
 
@@ -227,7 +222,6 @@ public class PaymentFacadeUnitTest {
         verify(userService).getUser(userId);
         verify(reservationService).getReservation(reservationId);
         verify(orderService).getOrder(reservation.getOrderRefId());
-        verify(reservationItemService).calculateTotalAmount(reservation.getReservationId());
         verify(pointService).usePoints(user.getId(), order.getTotalAmount());
         verifyNoInteractions(paymentService);
         verifyNoMoreInteractions(reservationService, orderService);

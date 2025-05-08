@@ -1,15 +1,10 @@
 package kr.hhplus.be.server.presentation;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.Instant;
-import java.util.List;
-
+import kr.hhplus.be.server.application.facade.ReservationFacade;
+import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
+import kr.hhplus.be.server.application.obj.ReservationCheckResult;
+import kr.hhplus.be.server.domain.schedule.Schedule;
+import kr.hhplus.be.server.presentation.api.v1.reserve.ReservationController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,12 +14,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import kr.hhplus.be.server.application.facade.ReservationFacade;
-import kr.hhplus.be.server.application.facade.SeatReservationFacade;
-import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
-import kr.hhplus.be.server.application.obj.ReservationCheckResult;
-import kr.hhplus.be.server.domain.schedule.Schedule;
-import kr.hhplus.be.server.presentation.api.v1.reserve.ReservationController;
+import java.time.Instant;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationControllerUnitTest {
@@ -33,9 +29,6 @@ class ReservationControllerUnitTest {
 
     @Mock
     private ReservationFacade reservationFacade;
-
-    @Mock
-    private SeatReservationFacade seatReservationFacade;
 
     @InjectMocks
     private ReservationController reservationController;
@@ -55,7 +48,7 @@ class ReservationControllerUnitTest {
     	ReservationCheckResult result = new ReservationCheckResult();
     	result.setSeatIds(List.of(101L, 102L));
     	
-        when(seatReservationFacade.getAvailableSeatIds(command))
+        when(reservationFacade.getAvailableSeatIds(command))
                 .thenReturn(result);
 
         mockMvc.perform(get("/reservations/available/seat")
@@ -65,7 +58,7 @@ class ReservationControllerUnitTest {
                 .andExpect(jsonPath("$.seatIds[0]").value(101))
                 .andExpect(jsonPath("$.seatIds[1]").value(102));
 
-        verify(seatReservationFacade, times(1)).getAvailableSeatIds(command);
+        verify(reservationFacade, times(1)).getAvailableSeatIds(command);
     }
 
     @Test

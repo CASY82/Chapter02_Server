@@ -20,4 +20,9 @@ public class SeatReservationDomainRepository implements SeatReservationRepositor
     public List<SeatReservation> findByScheduleIdAndNotCancelled() {
         return repository.findCancleSeatReservations(ReservationStatus.CANCEL);
     }
+
+    @Override
+    public void save(SeatReservation obj) {
+        repository.save(obj);
+    }
 }

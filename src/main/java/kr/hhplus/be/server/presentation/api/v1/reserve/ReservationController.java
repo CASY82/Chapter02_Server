@@ -1,27 +1,24 @@
 package kr.hhplus.be.server.presentation.api.v1.reserve;
 
-import java.util.stream.Collectors;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import jakarta.validation.constraints.Positive;
 import kr.hhplus.be.server.application.facade.ReservationFacade;
-import kr.hhplus.be.server.application.facade.SeatReservationFacade;
 import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
 import kr.hhplus.be.server.application.obj.ReservationCheckResult;
 import kr.hhplus.be.server.presentation.api.v1.obj.ScheduleResponse;
 import kr.hhplus.be.server.presentation.api.v1.obj.SeatResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
 public class ReservationController {
 	
 	private final ReservationFacade reservationFacade;
-	private final SeatReservationFacade seatReservationFacade;
 	
 	/**
 	 * 예약 가능한 좌석 목록 조회
@@ -38,7 +35,7 @@ public class ReservationController {
     	command.setScheduleId(scheduleId);
     	
         try {
-            ReservationCheckResult result = this.seatReservationFacade.getAvailableSeatIds(command);
+            ReservationCheckResult result = this.reservationFacade.getAvailableSeatIds(command);
 
             SeatResponse response = new SeatResponse();
             response.setSeatIds(result.getSeatIds());

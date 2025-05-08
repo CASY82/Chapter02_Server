@@ -30,7 +30,6 @@ public class PaymentFacade {
     private final OrderService orderService;
     private final PointService pointService;
     private final PaymentService paymentService;
-    private final ReservationItemService reservationItemService;
 
     @Transactional
     public PaymentResult pay(PaymentCommand command) {
@@ -47,11 +46,6 @@ public class PaymentFacade {
         Order order = orderService.getOrder(reservation.getOrderRefId());
         if (!order.getUserRefId().equals(user.getId())) {
             throw new IllegalArgumentException("Order does not belong to user: " + command.getUserId());
-        }
-
-        int calculatedTotal = reservationItemService.calculateTotalAmount(reservation.getReservationId());
-        if (order.getTotalAmount() != calculatedTotal) {
-            throw new IllegalStateException("Order total amount does not match ReservationItem total: " + command.getReservationId());
         }
 
         // 포인트 사용, 비관적 락

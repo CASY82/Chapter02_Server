@@ -40,9 +40,6 @@ public class Reservation extends BaseEntity {
     @Column(name = "order_ref_id", nullable = false)
     private Long orderRefId;
 
-    @Column(name = "seat_ref_id", nullable = false)
-    private Long seatRefId;
-
     @Column(name = "schedule_ref_id", nullable = false)
     private Long scheduleRefId;
 

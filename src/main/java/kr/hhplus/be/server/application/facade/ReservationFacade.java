@@ -1,15 +1,10 @@
 package kr.hhplus.be.server.application.facade;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Objects;
-
-import org.springframework.stereotype.Component;
-
 import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
 import kr.hhplus.be.server.application.obj.ReservationCheckResult;
 import kr.hhplus.be.server.application.obj.ReserveCommand;
 import kr.hhplus.be.server.application.obj.ReserveResult;
+import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.performance.Performance;
 import kr.hhplus.be.server.domain.performance.PerformanceService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -21,7 +16,16 @@ import kr.hhplus.be.server.domain.seat.Seat;
 import kr.hhplus.be.server.domain.seat.SeatService;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservation;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservationRepository;
+import kr.hhplus.be.server.domain.user.User;
+import kr.hhplus.be.server.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 예약 파사드
@@ -37,25 +41,55 @@ public class ReservationFacade {
     private final SeatService seatService;
     private final SeatReservationRepository seatReservationRepository;
     private final ReservationService reservationService;
-	
-	public ReservationCheckResult getAvailableSchedules(ReservationCheckCommand command) {
-		ReservationCheckResult result = new ReservationCheckResult();
-		
+    private final UserService userService;
+
+    public ReservationCheckResult getAvailableSchedules(ReservationCheckCommand command) {
+        ReservationCheckResult result = new ReservationCheckResult();
+
         // 공연 존재 여부 확인
         Performance performance = performanceService.getPerformance(command.getPerformanceId());
 
         if(Objects.isNull(performance)) {
-        	throw new IllegalArgumentException("Can't found Performance");
+            throw new IllegalArgumentException("Can't found Performance");
         }
-        
+
         result.setScheduleList(this.scheduleService.getAvailableSchedules(command.getPerformanceId()));
-        
+
         // 예약 가능 일정 조회
         return result;
     }
-	
-	public ReserveResult reserve(ReserveCommand command) {
+
+    public ReservationCheckResult getAvailableSeatIds(ReservationCheckCommand command) {
+        ReservationCheckResult result = new ReservationCheckResult();
+
+        // 일정 확인 및 공연장 ID 조회
+        Schedule schedule = scheduleService.getSchedule(command.getScheduleId());
+        Long venueRefId = schedule.getVenueRefId();
+
+        // 공연장의 전체 좌석 조회
+        List<Seat> seats = seatService.getSeatsByVenue(venueRefId);
+        List<Long> seatIds = seats.stream()
+                .map(Seat::getSeatId)
+                .collect(Collectors.toList());
+
+        // 예약된 좌석 및 5분간 점유된 좌석 확인
+        List<SeatReservation> reservedSeats = seatReservationRepository.findByScheduleIdAndNotCancelled();
+        List<Long> reservedSeatIds = reservedSeats.stream()
+                .map(SeatReservation::getSeatRefId)
+                .collect(Collectors.toList());
+
+        // 가용 좌석 필터링
+        result.setSeatIds(seatIds.stream()
+                .filter(seatId -> !reservedSeatIds.contains(seatId))
+                .collect(Collectors.toList()));
+
+        return result;
+    }
+
+    public ReserveResult reserve(ReserveCommand command) {
 		ReserveResult result = new ReserveResult();
+
+        User user = userService.getUser(command.getUserId());
         
         // 1. 스케줄 검증
         Schedule schedule = scheduleService.getSchedule(command.getScheduleId());
@@ -65,13 +99,12 @@ public class ReservationFacade {
 
         // 2. 좌석 가용성 확인
         List<Seat> seats = seatService.getSeatsByVenue(schedule.getVenueRefId());
-        List<Long> requestedSeatIds = command.getSeatIds();
         List<Long> reservedSeatIds = seatReservationRepository.findByScheduleIdAndNotCancelled()
             .stream()
             .map(SeatReservation::getSeatRefId)
             .toList();
 
-        boolean allSeatsAvailable = requestedSeatIds.stream()
+        boolean allSeatsAvailable = command.getSeatId().stream()
             .allMatch(seatId -> !reservedSeatIds.contains(seatId) && 
                               seats.stream().anyMatch(seat -> seat.getSeatId().equals(seatId)));
         
@@ -81,24 +114,24 @@ public class ReservationFacade {
 
         // 3. 예약 아이템 생성
         List<ReservationItem> items = new ArrayList<>();
-        for (Long seatId : requestedSeatIds) {
+        for (Long seatId : command.getSeatId()) {
             ReservationItem item = new ReservationItem();
-            item.setQuantity(1);
-            item.setUnitPrice(10000); // 예시 가격, 실제로는 공연/좌석별 가격 설정 필요
+            item.setScheduleRefId(command.getScheduleId());
+            item.setSeatRefId(seatId);
+            item.setUnitPrice(command.getPrice()); // 일단 임시로 화면단에서 가격을 받아온다 가정
             items.add(item);
         }
 
         // 4. 예약 생성
-        Reservation reservation = reservationService.createReservationWithItems(
-            command.getUserId(),
-            requestedSeatIds.get(0), // 단일 좌석 예약 기준, 다중 좌석은 별도 처리 필요
+        Reservation reservation = reservationService.createReservation(
+            user.getId(),
             command.getScheduleId(),
-            generateOrderId(),
+            command.getOrderId(),
             items
         );
 
-        // 5. 좌석 예약 상태 업데이트
-        for (Long seatId : requestedSeatIds) {
+        // 5. 좌석 예약 상태 업데이트(락 필요)
+        for (Long seatId : command.getSeatId()) {
             SeatReservation seatReservation = new SeatReservation();
             seatReservation.setSeatRefId(seatId);
             seatReservation.setReservationRefId(reservation.getReservationId());
@@ -112,7 +145,7 @@ public class ReservationFacade {
 
         result.setReservationId(reservation.getReservationId());
         result.setStatus(reservation.getReserveStatus().name());
-        result.setSeatIds(requestedSeatIds);
+        result.setSeatIds(command.getSeatId());
 
         return result;
 		

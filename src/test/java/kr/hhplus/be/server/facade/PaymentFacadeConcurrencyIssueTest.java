@@ -98,9 +98,6 @@ public class PaymentFacadeConcurrencyIssueTest {
         command.setUserId(userId);
         command.setReservationId(reservationId);
 
-        // Mock 설정
-        when(reservationItemService.calculateTotalAmount(reservationId)).thenReturn(1000);
-
         // When
         for (int i = 0; i < numberOfThreads; i++) {
             executorService.submit(() -> {

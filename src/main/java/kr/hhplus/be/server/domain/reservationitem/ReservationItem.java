@@ -33,14 +33,8 @@ public class ReservationItem extends BaseEntity {
     @Column(name = "schedule_ref_id", nullable = false)
     private Long scheduleRefId;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
-
     @Column(name = "unit_price", nullable = false)
     private Integer unitPrice;
-
-    @Column(name = "total_amount", nullable = false)
-    private Integer totalAmount;
 
     @Version
     private Long version;
