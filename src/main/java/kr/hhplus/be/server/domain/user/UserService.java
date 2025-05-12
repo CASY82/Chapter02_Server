@@ -17,4 +17,8 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
     }
+    
+    public void save(User user) {
+    	userRepository.save(user);
+    }
 }

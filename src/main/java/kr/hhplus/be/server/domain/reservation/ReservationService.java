@@ -45,6 +45,10 @@ public class ReservationService {
 
         return reservationRepository.save(reservation);
     }
+    
+    public void save(Reservation obj) {
+    	reservationRepository.save(obj);
+    }
 
     private Long generateUniqueReservationId() {
         return Math.abs(UUID.randomUUID().getMostSignificantBits());

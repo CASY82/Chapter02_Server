@@ -18,8 +18,11 @@ import kr.hhplus.be.server.domain.seatreservation.SeatReservation;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservationRepository;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import jakarta.transaction.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -86,6 +89,8 @@ public class ReservationFacade {
         return result;
     }
 
+    @Transactional
+    @DistributedLock(key = "reserveLock", waitTime = 5, leaseTime = 3)
     public ReserveResult reserve(ReserveCommand command) {
 		ReserveResult result = new ReserveResult();
 
@@ -131,6 +136,7 @@ public class ReservationFacade {
         );
 
         // 5. 좌석 예약 상태 업데이트(락 필요)
+        // Service쪽으로 걷어낼 예정
         for (Long seatId : command.getSeatId()) {
             SeatReservation seatReservation = new SeatReservation();
             seatReservation.setSeatRefId(seatId);
