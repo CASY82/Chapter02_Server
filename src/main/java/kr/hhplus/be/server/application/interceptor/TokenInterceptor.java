@@ -2,8 +2,10 @@ package kr.hhplus.be.server.application.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import kr.hhplus.be.server.domain.token.Token;
 import kr.hhplus.be.server.domain.token.TokenService;
 import kr.hhplus.be.server.infrastructure.queue.QueueStore;
+import kr.hhplus.be.server.presentation.scheduler.QueueMonitorScheduler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     private final TokenService tokenService;
     private final QueueStore queueStore;
+    private final QueueMonitorScheduler queueMonitorScheduler;
 
     @Value("${queue.max-enterable:3}")
     private int maxEnterable;
@@ -36,8 +39,10 @@ public class TokenInterceptor implements HandlerInterceptor {
         try {
             tokenService.validateToken(tokenValue);
             Long userRefId = tokenService.getUserRefIdFromToken(tokenValue);
-            if (!queueStore.isNowEnterable(userRefId, maxEnterable)) {
-                int position = queueStore.enterQueue(userRefId);
+            Token token = tokenService.getTokenByValue(tokenValue); // Token 객체 가져오기 (가정)
+            if (!queueStore.isNowEnterable(token, maxEnterable)) {
+                queueMonitorScheduler.requestEnterQueue(token);
+                int position = queueStore.getPosition(token);
                 response.setStatus(HttpStatus.ACCEPTED.value());
                 response.getWriter().write("Request queued at position: " + position);
                 return false;

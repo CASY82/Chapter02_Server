@@ -32,7 +32,7 @@ public class PaymentFacade {
     private final PaymentService paymentService;
 
     @Transactional
-    @DistributedLock(key = "payLock", waitTime = 5, leaseTime = 3)
+    @DistributedLock(key = "'payLock:' + #command.reservationId", waitTime = 5, leaseTime = 3)
     public PaymentResult pay(PaymentCommand command) {
         // 사용자 확인
         User user = userService.getUser(command.getUserId());

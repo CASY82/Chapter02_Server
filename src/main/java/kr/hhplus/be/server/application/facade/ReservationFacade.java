@@ -1,10 +1,18 @@
 package kr.hhplus.be.server.application.facade;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
 import kr.hhplus.be.server.application.obj.ReservationCheckResult;
 import kr.hhplus.be.server.application.obj.ReserveCommand;
 import kr.hhplus.be.server.application.obj.ReserveResult;
-import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.performance.Performance;
 import kr.hhplus.be.server.domain.performance.PerformanceService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
@@ -20,15 +28,6 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import jakarta.transaction.Transactional;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 예약 파사드
@@ -90,7 +89,7 @@ public class ReservationFacade {
     }
 
     @Transactional
-    @DistributedLock(key = "reserveLock", waitTime = 5, leaseTime = 3)
+    @DistributedLock(key = "'reserveLock:' + #command.scheduleId", waitTime = 5, leaseTime = 3)
     public ReserveResult reserve(ReserveCommand command) {
 		ReserveResult result = new ReserveResult();
 

@@ -18,7 +18,7 @@ import java.util.Date;
 public class TokenService {
     private final TokenRepository tokenRepository;
     private final QueueStore queueStore;
-    private static final String SECRET_KEY = "your-256-bit-secret-key-for-jwt-signing";
+    private static final String SECRET_KEY = "testSecretKey";
     private static final long TOKEN_EXPIRY_MS = 30 * 60 * 1000; // 30분
 
     @Value("${queue.max-enterable:3}")
@@ -61,14 +61,16 @@ public class TokenService {
         }
     }
 
+    public Token getTokenByValue(String tokenValue) {
+        return tokenRepository.findByTokenValue(tokenValue)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid token"));
+    }
+
     public QueueStatusResponse getQueueStatus(String authorization) {
         String tokenValue = authorization.startsWith("Bearer ") ? authorization.substring(7) : authorization;
-        Claims claims = Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(tokenValue).getBody();
-        Long userRefId = Long.valueOf(claims.getSubject());
-
-        int position = queueStore.getPosition(userRefId);
-        boolean enterable = queueStore.isNowEnterable(userRefId, maxEnterable);
-
+        Token token = getTokenByValue(tokenValue);
+        int position = queueStore.getPosition(token);
+        boolean enterable = queueStore.isNowEnterable(token, maxEnterable);
         return new QueueStatusResponse(position, enterable);
     }
 
