@@ -55,7 +55,7 @@ public class TokenServiceConcurrencyTest {
         // Then
         List<Token> tokens = tokenJpaRepository.findAll(); // findAll()는 테스트 전용으로 추가되었을 것으로 가정
         long count = tokens.stream()
-                .filter(t -> t.getUser().getId().equals(userRefId))
+                .filter(t -> t.getUserRefId().equals(userRefId))
                 .count();
 
         System.out.println("Issued tokens for user " + userRefId + ": " + count);

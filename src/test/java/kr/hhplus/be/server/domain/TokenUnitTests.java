@@ -38,7 +38,7 @@ public class TokenUnitTests {
         // then
         assertThat(newToken.getTokenId()).isNotBlank();
         assertThat(UUID.fromString(newToken.getTokenId())).isNotNull(); // UUID 형식 검증
-        assertThat(newToken.getUser().getId()).isEqualTo(newUserId);
+//        assertThat(newToken.getUser().getId()).isEqualTo(newUserId); // DB -> Redis로 변경
         assertThat(newToken.getTokenValue()).isEqualTo(newTokenValue);
         assertThat(newToken.getExpireDate()).isAfter(Instant.now());
         assertThat(newToken.getExpireDate()).isBeforeOrEqualTo(Instant.now().plus(Duration.ofMinutes(30)));

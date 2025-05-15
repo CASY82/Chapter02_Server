@@ -4,7 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.infrastructure.queue.QueueStore;
 import kr.hhplus.be.server.presentation.api.v1.token.TokenController.QueueStatusResponse;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +23,6 @@ public class TokenService {
     @Value("${queue.max-enterable:3}")
     private int maxEnterable;
 
-    @Transactional
     public Token issueToken(Long userRefId) {
         Token existingToken = tokenRepository.findByUserRefIdWithLock(userRefId)
                 .filter(Token::isValid)
