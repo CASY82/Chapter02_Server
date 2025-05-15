@@ -35,4 +35,7 @@ public class Schedule extends BaseEntity {
 
     @Column(name = "schedule_date_time", nullable = false)
     private Instant scheduleDateTime;
+    
+    @Column(name = "performance_start_time", nullable = false)
+    private Instant performanceStartTime; // 공연 시작 시간
 }
