@@ -15,7 +15,6 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 @RequiredArgsConstructor
 public class TokenInterceptor implements HandlerInterceptor {
-
     private final TokenService tokenService;
     private final QueueStore queueStore;
     private final QueueMonitorScheduler queueMonitorScheduler;
@@ -38,8 +37,7 @@ public class TokenInterceptor implements HandlerInterceptor {
 
         try {
             tokenService.validateToken(tokenValue);
-            Long userRefId = tokenService.getUserRefIdFromToken(tokenValue);
-            Token token = tokenService.getTokenByValue(tokenValue); // Token 객체 가져오기 (가정)
+            Token token = tokenService.getTokenByValue(tokenValue);
             if (!queueStore.isNowEnterable(token, maxEnterable)) {
                 queueMonitorScheduler.requestEnterQueue(token);
                 int position = queueStore.getPosition(token);
