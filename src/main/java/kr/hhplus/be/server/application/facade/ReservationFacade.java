@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
 import kr.hhplus.be.server.application.obj.ReservationCheckResult;
@@ -27,6 +27,7 @@ import kr.hhplus.be.server.domain.seatreservation.SeatReservationRepository;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
+import kr.hhplus.be.server.infrastructure.queue.obj.ReservationEvent;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -37,13 +38,13 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ReservationFacade {
-	
-	private final PerformanceService performanceService;
+    private final PerformanceService performanceService;
     private final ScheduleService scheduleService;
     private final SeatService seatService;
     private final SeatReservationRepository seatReservationRepository;
     private final ReservationService reservationService;
     private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ReservationCheckResult getAvailableSchedules(ReservationCheckCommand command) {
         ReservationCheckResult result = new ReservationCheckResult();
@@ -91,7 +92,7 @@ public class ReservationFacade {
     @Transactional
     @DistributedLock(key = "'reserveLock:' + #command.scheduleId", waitTime = 5, leaseTime = 3)
     public ReserveResult reserve(ReserveCommand command) {
-		ReserveResult result = new ReserveResult();
+        ReserveResult result = new ReserveResult();
 
         User user = userService.getUser(command.getUserId());
         
@@ -135,7 +136,6 @@ public class ReservationFacade {
         );
 
         // 5. 좌석 예약 상태 업데이트(락 필요)
-        // Service쪽으로 걷어낼 예정
         for (Long seatId : command.getSeatId()) {
             SeatReservation seatReservation = new SeatReservation();
             seatReservation.setSeatRefId(seatId);
@@ -148,12 +148,20 @@ public class ReservationFacade {
         // 6. 예약 완료
         reservationService.completeReservation(reservation.getReservationId());
 
+        // 7. 인기도 업데이트 이벤트 발행(비동기)
+        Long totalSeats = (long) seats.size();
+        Long reservedSeats = (long) reservedSeatIds.size() + command.getSeatId().size();
+        eventPublisher.publishEvent(new ReservationEvent(
+            schedule.getPerformanceRefId(),
+            command.getScheduleId(),
+            totalSeats,
+            reservedSeats
+        ));
+
         result.setReservationId(reservation.getReservationId());
         result.setStatus(reservation.getReserveStatus().name());
         result.setSeatIds(command.getSeatId());
 
         return result;
-		
-	}
+    }
 }
-

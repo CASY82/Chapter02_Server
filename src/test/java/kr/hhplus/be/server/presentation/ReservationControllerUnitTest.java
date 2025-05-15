@@ -81,6 +81,7 @@ class ReservationControllerUnitTest {
                 201L,
                 1L,
                 1L,
+                Instant.parse("2025-04-20T00:00:00Z"),
                 Instant.parse("2025-04-20T00:00:00Z")
         );
         Schedule schedule2 = new Schedule(
@@ -88,7 +89,8 @@ class ReservationControllerUnitTest {
                 202L,
                 1L,
                 1L,
-                Instant.parse("2025-04-21T00:00:00Z")
+                Instant.parse("2025-04-21T00:00:00Z"),
+                Instant.parse("2025-04-20T00:00:00Z")
         );
         
         result.setScheduleList(List.of(schedule1, schedule2));
