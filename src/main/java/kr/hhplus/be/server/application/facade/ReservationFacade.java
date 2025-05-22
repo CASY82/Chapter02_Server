@@ -48,120 +48,56 @@ public class ReservationFacade {
 
     public ReservationCheckResult getAvailableSchedules(ReservationCheckCommand command) {
         ReservationCheckResult result = new ReservationCheckResult();
-
-        // 공연 존재 여부 확인
         Performance performance = performanceService.getPerformance(command.getPerformanceId());
-
-        if(Objects.isNull(performance)) {
-            throw new IllegalArgumentException("Can't found Performance");
+        if (Objects.isNull(performance)) {
+            throw new IllegalArgumentException("공연을 찾을 수 없습니다.");
         }
-
-        result.setScheduleList(this.scheduleService.getAvailableSchedules(command.getPerformanceId()));
-
-        // 예약 가능 일정 조회
+        result.setScheduleList(scheduleService.getAvailableSchedules(command.getPerformanceId()));
         return result;
     }
 
     public ReservationCheckResult getAvailableSeatIds(ReservationCheckCommand command) {
         ReservationCheckResult result = new ReservationCheckResult();
-
-        // 일정 확인 및 공연장 ID 조회
-        Schedule schedule = scheduleService.getSchedule(command.getScheduleId());
-        Long venueRefId = schedule.getVenueRefId();
-
-        // 공연장의 전체 좌석 조회
-        List<Seat> seats = seatService.getSeatsByVenue(venueRefId);
-        List<Long> seatIds = seats.stream()
-                .map(Seat::getSeatId)
-                .collect(Collectors.toList());
-
-        // 예약된 좌석 및 5분간 점유된 좌석 확인
-        List<SeatReservation> reservedSeats = seatReservationRepository.findByScheduleIdAndNotCancelled();
-        List<Long> reservedSeatIds = reservedSeats.stream()
-                .map(SeatReservation::getSeatRefId)
-                .collect(Collectors.toList());
-
-        // 가용 좌석 필터링
-        result.setSeatIds(seatIds.stream()
-                .filter(seatId -> !reservedSeatIds.contains(seatId))
-                .collect(Collectors.toList()));
-
+        List<Long> seatIds = scheduleService.getAvailableSeatIds(command.getScheduleId());
+        result.setSeatIds(seatIds);
         return result;
     }
 
     @Transactional
     @DistributedLock(key = "'reserveLock:' + #command.scheduleId", waitTime = 5, leaseTime = 3)
     public ReserveResult reserve(ReserveCommand command) {
-        ReserveResult result = new ReserveResult();
-
+        // 유저 검증
         User user = userService.getUser(command.getUserId());
-        
-        // 1. 스케줄 검증
-        Schedule schedule = scheduleService.getSchedule(command.getScheduleId());
-        if (Objects.isNull(schedule)) {
-            throw new IllegalArgumentException("스케줄을 찾을 수 없습니다");
-        }
 
-        // 2. 좌석 가용성 확인
-        List<Seat> seats = seatService.getSeatsByVenue(schedule.getVenueRefId());
+        // 좌석 가용성 확인
+        List<Seat> seats = seatService.getSeatsByVenue(scheduleService.getSchedule(command.getScheduleId()).getVenueRefId());
         List<Long> reservedSeatIds = seatReservationRepository.findByScheduleIdAndNotCancelled()
-            .stream()
-            .map(SeatReservation::getSeatRefId)
-            .toList();
+                .stream()
+                .map(SeatReservation::getSeatRefId)
+                .toList();
 
         boolean allSeatsAvailable = command.getSeatId().stream()
-            .allMatch(seatId -> !reservedSeatIds.contains(seatId) && 
-                              seats.stream().anyMatch(seat -> seat.getSeatId().equals(seatId)));
-        
+                .allMatch(seatId -> !reservedSeatIds.contains(seatId) &&
+                        seats.stream().anyMatch(seat -> seat.getSeatId().equals(seatId)));
+
         if (!allSeatsAvailable) {
-            throw new IllegalStateException("선택한 좌석 중 일부가 이미 예약되었습니다");
+            throw new IllegalStateException("선택한 좌석 중 일부가 이미 예약되었습니다.");
         }
 
-        // 3. 예약 아이템 생성
-        List<ReservationItem> items = new ArrayList<>();
-        for (Long seatId : command.getSeatId()) {
-            ReservationItem item = new ReservationItem();
-            item.setScheduleRefId(command.getScheduleId());
-            item.setSeatRefId(seatId);
-            item.setUnitPrice(command.getPrice()); // 일단 임시로 화면단에서 가격을 받아온다 가정
-            items.add(item);
-        }
+        // 예약 생성 (도메인 서비스 호출)
+        Reservation reservation = reservationService.createReservation(command, user.getId());
 
-        // 4. 예약 생성
-        Reservation reservation = reservationService.createReservation(
-            user.getId(),
-            command.getScheduleId(),
-            command.getOrderId(),
-            items
-        );
-
-        // 5. 좌석 예약 상태 업데이트(락 필요)
-        for (Long seatId : command.getSeatId()) {
-            SeatReservation seatReservation = new SeatReservation();
-            seatReservation.setSeatRefId(seatId);
-            seatReservation.setReservationRefId(reservation.getReservationId());
-            seatReservation.setReserved(true);
-            seatReservation.setReservedAt(Instant.now());
-            seatReservationRepository.save(seatReservation);
-        }
-
-        // 6. 예약 완료
-        reservationService.completeReservation(reservation.getReservationId());
-
-        // 7. 인기도 업데이트 이벤트 발행(비동기)
-        Long totalSeats = (long) seats.size();
-        Long reservedSeats = (long) reservedSeatIds.size() + command.getSeatId().size();
+        // 이벤트 발행
+        eventPublisher.publishEvent(new SeatReservedEvent(
+                reservation.getReservationId(), command.getScheduleId(), command.getSeatId()));
         eventPublisher.publishEvent(new ReservationEvent(
-            schedule.getPerformanceRefId(),
-            command.getScheduleId(),
-            totalSeats,
-            reservedSeats
-        ));
+                scheduleService.getSchedule(command.getScheduleId()).getPerformanceRefId(),
+                command.getScheduleId(), (long) seats.size(), (long) reservedSeatIds.size() + command.getSeatId().size()));
 
+        ReserveResult result = new ReserveResult();
         result.setReservationId(reservation.getReservationId());
         result.setStatus(reservation.getReserveStatus().name());
         result.setSeatIds(command.getSeatId());
-
         return result;
     }
 }

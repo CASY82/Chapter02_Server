@@ -1,57 +1,46 @@
 package kr.hhplus.be.server.domain.payment;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.UUID;
-
-import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.domain.order.OrderService;
+import kr.hhplus.be.server.domain.point.Point;
+import kr.hhplus.be.server.domain.point.PointService;
+import kr.hhplus.be.server.domain.reservation.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-	
-	private final PaymentRepository paymentRepository;
-	
-	@Transactional
-    public Payment processPayment(Long userRefId, Integer amount) {
-        // 동일 사용자 결제 확인, 비관적 락 적용
-        List<Payment> existingPayments = paymentRepository.findByUserRefIdWithLock(userRefId);
-        for (Payment existingPayment : existingPayments) {
-            if ("COMPLETED".equals(existingPayment.getPaymentStatus()) &&
-                existingPayment.getAmount().equals(amount)) {
-                throw new IllegalStateException("Payment already completed for user: " + userRefId);
-            }
-        }
+    private final PointService pointService;
+    private final ReservationService reservationService;
+    private final OrderService orderService;
+    private final PaymentRepository paymentRepository;
+
+    private Long lastPaymentId; // 임시로 paymentId 저장 (실제로는 DB에서 가져옴)
+
+    @Transactional
+    public void processPayment(Long userId, Integer amount, Long reservationId, Long orderId) {
+        // 포인트 차감
+        Point point = pointService.usePoints(userId, amount);
+
+        // 예약 완료
+        reservationService.completeReservation(reservationId);
 
         // 결제 생성
         Payment payment = new Payment();
-        payment.setPaymentId(generateUniquePaymentId());
-        payment.setUserRefId(userRefId);
-        payment.setPaymentDate(Instant.now());
+        payment.setUserRefId(userId);
         payment.setAmount(amount);
         payment.setPaymentStatus("COMPLETED");
+        paymentRepository.save(payment);
 
-        return paymentRepository.save(payment);
+        // 주문 상태 업데이트
+        orderService.updatePaymentRefId(orderId, payment.getId());
+
+        // paymentId 저장 (이벤트에서 사용)
+        this.lastPaymentId = payment.getId();
     }
 
-    private Long generateUniquePaymentId() {
-        return Math.abs(UUID.randomUUID().getMostSignificantBits());
-    }
-	
-	public void save(Payment payment) {
-		this.paymentRepository.save(payment);
-	}
-	
-    public Payment createPayment(Long userRefId, Integer amount, Long paymentId) {
-        Payment payment = new Payment();
-        payment.setPaymentId(paymentId);
-        payment.setUserRefId(userRefId);
-        payment.setPaymentDate(Instant.now());
-        payment.setAmount(amount);
-        payment.setPaymentStatus("OK");
-        return this.paymentRepository.save(payment);
+    public Long getPaymentId() {
+        return lastPaymentId; // 실제로는 리포지토리에서 조회
     }
 }
