@@ -56,7 +56,7 @@ class ReservationFacadeDistributedLockIntegrationTest {
 
     @Autowired
     private ReservationFacade reservationFacade;
-
+	
     @Autowired
     private UserService userService;
 
@@ -133,7 +133,7 @@ class ReservationFacadeDistributedLockIntegrationTest {
         command.setUserId(testUser.getUserId());
         command.setScheduleId(testSchedule.getScheduleId());
         command.setOrderId(testOrderId);
-        command.setSeatId(Arrays.asList(1L, 2L));
+        command.setSeatIds(Arrays.asList(1L, 2L));
         command.setPrice(100);
 
         // When
@@ -164,7 +164,7 @@ class ReservationFacadeDistributedLockIntegrationTest {
         command.setUserId(testUser.getUserId());
         command.setScheduleId(999L); // 존재하지 않는 스케줄
         command.setOrderId(testOrderId);
-        command.setSeatId(Arrays.asList(1L, 2L));
+        command.setSeatIds(Arrays.asList(1L, 2L));
         command.setPrice(100);
 
         // When & Then
@@ -187,7 +187,7 @@ class ReservationFacadeDistributedLockIntegrationTest {
         command.setUserId(testUser.getUserId());
         command.setScheduleId(testSchedule.getScheduleId());
         command.setOrderId(testOrderId);
-        command.setSeatId(Arrays.asList(1L, 2L));
+        command.setSeatIds(Arrays.asList(1L, 2L));
         command.setPrice(100);
 
         // When & Then
@@ -203,7 +203,7 @@ class ReservationFacadeDistributedLockIntegrationTest {
         command.setUserId("invalidUser"); // 존재하지 않는 사용자
         command.setScheduleId(testSchedule.getScheduleId());
         command.setOrderId(testOrderId);
-        command.setSeatId(Arrays.asList(1L, 2L));
+        command.setSeatIds(Arrays.asList(1L, 2L));
         command.setPrice(100);
 
         // When & Then
@@ -219,7 +219,7 @@ class ReservationFacadeDistributedLockIntegrationTest {
         command.setUserId(testUser.getUserId());
         command.setScheduleId(testSchedule.getScheduleId());
         command.setOrderId(testOrderId);
-        command.setSeatId(Arrays.asList(1L, 2L));
+        command.setSeatIds(Arrays.asList(1L, 2L));
         command.setPrice(100);
 
         ExecutorService executorService = Executors.newFixedThreadPool(5);

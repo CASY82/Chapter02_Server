@@ -1,16 +1,17 @@
 package kr.hhplus.be.server.domain.reservation;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import kr.hhplus.be.server.application.obj.ReserveCommand;
 import kr.hhplus.be.server.domain.reservationitem.ReservationItem;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservation;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservationRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class ReservationService {
     public Reservation createReservation(ReserveCommand command, Long userId) {
         // 예약 아이템 생성
         List<ReservationItem> items = new ArrayList<>();
-        for (Long seatId : command.getSeatId()) {
+        for (Long seatId : command.getSeatIds()) {
             ReservationItem item = new ReservationItem();
             item.setScheduleRefId(command.getScheduleId());
             item.setSeatRefId(seatId);
@@ -40,7 +41,7 @@ public class ReservationService {
         reservationRepository.save(reservation);
 
         // 좌석 예약 상태 업데이트
-        for (Long seatId : command.getSeatId()) {
+        for (Long seatId : command.getSeatIds()) {
             SeatReservation seatReservation = new SeatReservation();
             seatReservation.setSeatRefId(seatId);
             seatReservation.setReservationRefId(reservation.getReservationId());
@@ -58,7 +59,13 @@ public class ReservationService {
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
         reservation.setReserveStatus(ReservationStatus.COMPLETED);
         reservationRepository.save(reservation);
+    }    
+    
+    public Reservation getReservation(Long reservationId) {
+    	return reservationRepository.findByReservationId(reservationId).orElseThrow();
     }
     
-    public Reservation getReservation(Long )
+    public void save(Reservation reservation) {
+    	reservationRepository.save(reservation);
+    }
 }

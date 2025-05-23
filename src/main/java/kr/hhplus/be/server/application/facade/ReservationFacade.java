@@ -1,13 +1,12 @@
 package kr.hhplus.be.server.application.facade;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.application.obj.ReservationCheckCommand;
 import kr.hhplus.be.server.application.obj.ReservationCheckResult;
@@ -17,7 +16,6 @@ import kr.hhplus.be.server.domain.performance.Performance;
 import kr.hhplus.be.server.domain.performance.PerformanceService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
-import kr.hhplus.be.server.domain.reservationitem.ReservationItem;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import kr.hhplus.be.server.domain.seat.Seat;
@@ -28,6 +26,7 @@ import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
 import kr.hhplus.be.server.infrastructure.queue.obj.ReservationEvent;
+import kr.hhplus.be.server.presentation.event.obj.SeatReservedEvent;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -58,8 +57,28 @@ public class ReservationFacade {
 
     public ReservationCheckResult getAvailableSeatIds(ReservationCheckCommand command) {
         ReservationCheckResult result = new ReservationCheckResult();
-        List<Long> seatIds = scheduleService.getAvailableSeatIds(command.getScheduleId());
-        result.setSeatIds(seatIds);
+        
+        // 일정 확인 및 공연장 ID 조회
+        Schedule schedule = scheduleService.getSchedule(command.getScheduleId());
+        Long venueRefId = schedule.getVenueRefId();
+
+        // 공연장의 전체 좌석 조회
+        List<Seat> seats = seatService.getSeatsByVenue(venueRefId);
+        List<Long> seatIds = seats.stream()
+                .map(Seat::getSeatId)
+                .collect(Collectors.toList());
+
+        // 예약된 좌석 및 5분간 점유된 좌석 확인
+        List<SeatReservation> reservedSeats = seatReservationRepository.findByScheduleIdAndNotCancelled();
+        List<Long> reservedSeatIds = reservedSeats.stream()
+                .map(SeatReservation::getSeatRefId)
+                .collect(Collectors.toList());
+
+        // 가용 좌석 필터링
+        result.setSeatIds(seatIds.stream()
+                .filter(seatId -> !reservedSeatIds.contains(seatId))
+                .collect(Collectors.toList()));
+        
         return result;
     }
 
@@ -76,7 +95,7 @@ public class ReservationFacade {
                 .map(SeatReservation::getSeatRefId)
                 .toList();
 
-        boolean allSeatsAvailable = command.getSeatId().stream()
+        boolean allSeatsAvailable = command.getSeatIds().stream()
                 .allMatch(seatId -> !reservedSeatIds.contains(seatId) &&
                         seats.stream().anyMatch(seat -> seat.getSeatId().equals(seatId)));
 
@@ -84,20 +103,20 @@ public class ReservationFacade {
             throw new IllegalStateException("선택한 좌석 중 일부가 이미 예약되었습니다.");
         }
 
-        // 예약 생성 (도메인 서비스 호출)
+        // 예약 생성
         Reservation reservation = reservationService.createReservation(command, user.getId());
 
         // 이벤트 발행
         eventPublisher.publishEvent(new SeatReservedEvent(
-                reservation.getReservationId(), command.getScheduleId(), command.getSeatId()));
+                reservation.getReservationId(), command.getScheduleId(), command.getSeatIds()));
         eventPublisher.publishEvent(new ReservationEvent(
                 scheduleService.getSchedule(command.getScheduleId()).getPerformanceRefId(),
-                command.getScheduleId(), (long) seats.size(), (long) reservedSeatIds.size() + command.getSeatId().size()));
+                command.getScheduleId(), (long) seats.size(), (long) reservedSeatIds.size() + command.getSeatIds().size()));
 
         ReserveResult result = new ReserveResult();
         result.setReservationId(reservation.getReservationId());
         result.setStatus(reservation.getReserveStatus().name());
-        result.setSeatIds(command.getSeatId());
+        result.setSeatIds(command.getSeatIds());
         return result;
     }
 }

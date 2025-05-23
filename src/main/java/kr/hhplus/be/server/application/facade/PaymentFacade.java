@@ -8,15 +8,14 @@ import kr.hhplus.be.server.application.obj.PaymentCommand;
 import kr.hhplus.be.server.application.obj.PaymentResult;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
+import kr.hhplus.be.server.presentation.event.obj.PaymentCompleteEvent;
 import lombok.RequiredArgsConstructor;
 
 /**

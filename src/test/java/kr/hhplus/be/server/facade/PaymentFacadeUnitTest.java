@@ -91,7 +91,6 @@ public class PaymentFacadeUnitTest {
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
         when(pointService.usePoints(user.getId(), order.getTotalAmount())).thenReturn(point);
-        when(reservationService.completeReservation(reservationId)).thenReturn(reservation);
         when(orderService.updatePaymentRefId(order.getId(), payment.getId())).thenReturn(order);
 
         // when
