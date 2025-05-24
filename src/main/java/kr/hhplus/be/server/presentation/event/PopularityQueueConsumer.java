@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.redis;
+package kr.hhplus.be.server.presentation.event;
 
 import java.time.Instant;
 import java.util.List;
@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import kr.hhplus.be.server.application.redis.obj.PeriodType;
+import kr.hhplus.be.server.application.period.PeriodType;
+import kr.hhplus.be.server.application.ranking.event.PopularityQueueProducer;
+import kr.hhplus.be.server.application.ranking.event.PopularityQueueProducer.PopularityMessage;
 import kr.hhplus.be.server.domain.schedule.Schedule;
 import kr.hhplus.be.server.domain.schedule.ScheduleService;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.redis;
+package kr.hhplus.be.server.application.ranking;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

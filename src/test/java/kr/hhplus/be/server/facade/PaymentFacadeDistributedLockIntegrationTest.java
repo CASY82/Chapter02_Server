@@ -28,8 +28,6 @@ import kr.hhplus.be.server.application.obj.PaymentCommand;
 import kr.hhplus.be.server.application.obj.PaymentResult;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.payment.PaymentRepository;
-import kr.hhplus.be.server.domain.payment.PaymentService;
 import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.Reservation;

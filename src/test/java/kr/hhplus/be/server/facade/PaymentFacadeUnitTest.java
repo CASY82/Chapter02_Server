@@ -91,8 +91,6 @@ public class PaymentFacadeUnitTest {
         when(reservationService.getReservation(reservationId)).thenReturn(reservation);
         when(orderService.getOrder(reservation.getOrderRefId())).thenReturn(order);
         when(pointService.usePoints(user.getId(), order.getTotalAmount())).thenReturn(point);
-        when(reservationService.completeReservation(reservationId)).thenReturn(reservation);
-        when(paymentService.processPayment(user.getId(), order.getTotalAmount())).thenReturn(payment);
         when(orderService.updatePaymentRefId(order.getId(), payment.getId())).thenReturn(order);
 
         // when
@@ -108,7 +106,6 @@ public class PaymentFacadeUnitTest {
         verify(orderService).getOrder(reservation.getOrderRefId());
         verify(pointService).usePoints(user.getId(), order.getTotalAmount());
         verify(reservationService).completeReservation(reservationId);
-        verify(paymentService).processPayment(user.getId(), order.getTotalAmount());
         verify(orderService).updatePaymentRefId(order.getId(), payment.getId());
         verifyNoMoreInteractions(userService, reservationService, orderService, pointService, paymentService, reservationItemService);
     }
