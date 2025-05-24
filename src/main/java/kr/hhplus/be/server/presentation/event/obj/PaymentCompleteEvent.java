@@ -9,4 +9,5 @@ public class PaymentCompleteEvent {
 	private Long paymentId;
 	private Long reservationId;
 	private Long userId;
+	private Long orderId;
 }

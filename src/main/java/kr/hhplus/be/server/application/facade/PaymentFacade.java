@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.application.facade;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +14,6 @@ import kr.hhplus.be.server.domain.reservation.ReservationService;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
 import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
-import kr.hhplus.be.server.presentation.event.obj.PaymentCompleteEvent;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -30,7 +28,6 @@ public class PaymentFacade {
     private final OrderService orderService;
     private final PointService pointService;
     private final PaymentService paymentService;
-    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     @DistributedLock(key = "'payLock:' + #command.reservationId", waitTime = 5, leaseTime = 3)
@@ -49,10 +46,6 @@ public class PaymentFacade {
 
         // 결제 처리
         paymentService.processPayment(user.getId(), order.getTotalAmount(), reservation.getReservationId(), order.getId());
-
-        // 이벤트 발행
-        eventPublisher.publishEvent(new PaymentCompleteEvent(
-                paymentService.getPaymentId(), reservation.getReservationId(), user.getId()));
 
         PaymentResult response = new PaymentResult();
         response.setPaymentStatus("COMPLETED");

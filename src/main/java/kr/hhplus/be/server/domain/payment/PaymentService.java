@@ -4,7 +4,10 @@ import kr.hhplus.be.server.domain.order.OrderService;
 import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
+import kr.hhplus.be.server.presentation.event.obj.PaymentCompleteEvent;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,8 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentService {
     private final PointService pointService;
     private final ReservationService reservationService;
-    private final OrderService orderService;
     private final PaymentRepository paymentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     private Long lastPaymentId; // 임시로 paymentId 저장 (실제로는 DB에서 가져옴)
 
@@ -32,12 +35,10 @@ public class PaymentService {
         payment.setAmount(amount);
         payment.setPaymentStatus("COMPLETED");
         paymentRepository.save(payment);
-
-        // 주문 상태 업데이트
-        orderService.updatePaymentRefId(orderId, payment.getId());
-
-        // paymentId 저장 (이벤트에서 사용)
-        this.lastPaymentId = payment.getId();
+        
+        // 이벤트 발행
+        eventPublisher.publishEvent(new PaymentCompleteEvent(
+                this.getPaymentId(), reservationId, userId, orderId));
     }
 
     public Long getPaymentId() {
