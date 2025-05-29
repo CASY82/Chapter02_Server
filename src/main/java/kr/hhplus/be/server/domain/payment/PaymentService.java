@@ -1,15 +1,14 @@
 package kr.hhplus.be.server.domain.payment;
 
-import kr.hhplus.be.server.domain.order.OrderService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
+import kr.hhplus.be.server.infrastructure.kafka.KafkaProducerService;
 import kr.hhplus.be.server.presentation.event.obj.PaymentCompleteEvent;
 import lombok.RequiredArgsConstructor;
-
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,7 +16,9 @@ public class PaymentService {
     private final PointService pointService;
     private final ReservationService reservationService;
     private final PaymentRepository paymentRepository;
-    private final ApplicationEventPublisher eventPublisher;
+//    private final ApplicationEventPublisher eventPublisher;
+    private final KafkaProducerService kafkaProducerService;
+
 
     private Long lastPaymentId; // 임시로 paymentId 저장 (실제로는 DB에서 가져옴)
 
@@ -37,7 +38,7 @@ public class PaymentService {
         paymentRepository.save(payment);
         
         // 이벤트 발행
-        eventPublisher.publishEvent(new PaymentCompleteEvent(
+        kafkaProducerService.sendMessage("payment-complete-topic", new PaymentCompleteEvent(
                 this.getPaymentId(), reservationId, userId, orderId));
     }
 
