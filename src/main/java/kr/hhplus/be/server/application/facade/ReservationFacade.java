@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import jakarta.transaction.Transactional;
@@ -24,6 +23,7 @@ import kr.hhplus.be.server.domain.seatreservation.SeatReservation;
 import kr.hhplus.be.server.domain.seatreservation.SeatReservationRepository;
 import kr.hhplus.be.server.domain.user.User;
 import kr.hhplus.be.server.domain.user.UserService;
+import kr.hhplus.be.server.infrastructure.kafka.KafkaProducerService;
 import kr.hhplus.be.server.infrastructure.lock.DistributedLock;
 import kr.hhplus.be.server.infrastructure.queue.obj.ReservationEvent;
 import kr.hhplus.be.server.presentation.event.obj.SeatReservedEvent;
@@ -43,7 +43,8 @@ public class ReservationFacade {
     private final SeatReservationRepository seatReservationRepository;
     private final ReservationService reservationService;
     private final UserService userService;
-    private final ApplicationEventPublisher eventPublisher;
+//    private final ApplicationEventPublisher eventPublisher; // 기존 Spring event 발행 제거
+    private final KafkaProducerService eventPublisher;
 
     public ReservationCheckResult getAvailableSchedules(ReservationCheckCommand command) {
         ReservationCheckResult result = new ReservationCheckResult();
@@ -107,9 +108,9 @@ public class ReservationFacade {
         Reservation reservation = reservationService.createReservation(command, user.getId());
 
         // 이벤트 발행
-        eventPublisher.publishEvent(new SeatReservedEvent(
+        eventPublisher.sendMessage("seat-reserved-topic", new SeatReservedEvent(
                 reservation.getReservationId(), command.getScheduleId(), command.getSeatIds()));
-        eventPublisher.publishEvent(new ReservationEvent(
+        eventPublisher.sendMessage("reservation-topic", new ReservationEvent(
                 scheduleService.getSchedule(command.getScheduleId()).getPerformanceRefId(),
                 command.getScheduleId(), (long) seats.size(), (long) reservedSeatIds.size() + command.getSeatIds().size()));
 
