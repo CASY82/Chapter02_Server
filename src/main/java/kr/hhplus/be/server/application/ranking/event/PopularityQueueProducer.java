@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.redis;
+package kr.hhplus.be.server.application.ranking.event;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

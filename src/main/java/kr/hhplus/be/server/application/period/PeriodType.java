@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.application.redis.obj;
+package kr.hhplus.be.server.application.period;
 
 import java.time.Instant;
 import java.time.LocalDate;

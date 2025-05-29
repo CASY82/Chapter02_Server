@@ -7,9 +7,7 @@ import kr.hhplus.be.server.application.obj.PaymentCommand;
 import kr.hhplus.be.server.application.obj.PaymentResult;
 import kr.hhplus.be.server.domain.order.Order;
 import kr.hhplus.be.server.domain.order.OrderService;
-import kr.hhplus.be.server.domain.payment.Payment;
 import kr.hhplus.be.server.domain.payment.PaymentService;
-import kr.hhplus.be.server.domain.point.Point;
 import kr.hhplus.be.server.domain.point.PointService;
 import kr.hhplus.be.server.domain.reservation.Reservation;
 import kr.hhplus.be.server.domain.reservation.ReservationService;
@@ -34,38 +32,24 @@ public class PaymentFacade {
     @Transactional
     @DistributedLock(key = "'payLock:' + #command.reservationId", waitTime = 5, leaseTime = 3)
     public PaymentResult pay(PaymentCommand command) {
-        // 사용자 확인
+        // 유저 및 소유권 검증
         User user = userService.getUser(command.getUserId());
-
-        // 예약 확인 및 소유권 검증 (락 없음)
         Reservation reservation = reservationService.getReservation(command.getReservationId());
         if (!reservation.getUserRefId().equals(user.getId())) {
-            throw new IllegalArgumentException("Reservation does not belong to user: " + command.getUserId());
+            throw new IllegalArgumentException("예약이 사용자에게 속하지 않습니다: " + command.getUserId());
         }
 
-        // 주문 확인, 비관적 락
         Order order = orderService.getOrder(reservation.getOrderRefId());
         if (!order.getUserRefId().equals(user.getId())) {
-            throw new IllegalArgumentException("Order does not belong to user: " + command.getUserId());
+            throw new IllegalArgumentException("주문이 사용자에게 속하지 않습니다: " + command.getUserId());
         }
 
-        // 포인트 사용, 비관적 락
-        Point point = pointService.usePoints(user.getId(), order.getTotalAmount());
-
-        // 예약 상태 완료, 비관적 락
-        reservationService.completeReservation(command.getReservationId());
-
-        // 결제 기록 생성, 비관적 락
-        Payment payment = paymentService.processPayment(user.getId(), order.getTotalAmount());
-
-        // 주문 업데이트
-        orderService.updatePaymentRefId(reservation.getOrderRefId(), payment.getId());
+        // 결제 처리
+        paymentService.processPayment(user.getId(), order.getTotalAmount(), reservation.getReservationId(), order.getId());
 
         PaymentResult response = new PaymentResult();
-        response.setPaymentStatus(payment.getPaymentStatus());
-        response.setRemainPoint(point.getRemainPoint().longValue());
-
+        response.setPaymentStatus("COMPLETED");
+        response.setRemainPoint(pointService.getPointBalance(user.getId()).longValue());
         return response;
     }
-
 }
