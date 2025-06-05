@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  mysql:
+  mysql-primary:
     image: mysql:8.0
-    container_name: mysql
+    container_name: mysql-primary
     ports:
       - "3306:3306"
     environment:
@@ -11,20 +11,78 @@ services:
       - MYSQL_USER=application
       - MYSQL_PASSWORD=application
       - MYSQL_DATABASE=hhplus
+      - MYSQL_BUFFER_POOL_SIZE=512M
+      - MYSQL_MAX_CONNECTIONS=200
+      - MYSQL_QUERY_CACHE_SIZE=64M
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-primary-data:/var/lib/mysql
+      - ./mysql-init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+
+  mysql-replica:
+    image: mysql:8.0
+    container_name: mysql-replica
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_USER=application
+      - MYSQL_PASSWORD=application
+      - MYSQL_DATABASE=hhplus
+      - MYSQL_REPLICATION_MODE=replica
+      - MYSQL_REPLICATION_USER=repl
+      - MYSQL_REPLICATION_PASSWORD=replpass
+    volumes:
+      - mysql-replica-data:/var/lib/mysql
+    networks:
+      - app-network
+    depends_on:
+      - mysql-primary
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
 
   redis:
     image: redis:7.0
     container_name: redis
     ports:
       - "6379:6379"
+    command: redis-server --maxmemory 512mb --maxmemory-policy volatile-lru --appendonly no
     volumes:
       - redis-data:/data
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+
+  redis-sentinel:
+    image: redis:7.0
+    container_name: redis-sentinel
+    ports:
+      - "26379:26379"
+    command: redis-sentinel /usr/local/etc/redis/sentinel.conf
+    volumes:
+      - ./redis-sentinel.conf:/usr/local/etc/redis/sentinel.conf
+    networks:
+      - app-network
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
 
   kafka1:
     image: confluentinc/cp-kafka:7.5.0
@@ -43,6 +101,9 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_NUM_PARTITIONS: "6"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_MESSAGE_MAX_BYTES: "10485760"
     volumes:
       - kafka1-data:/var/lib/kafka/data
     networks:
@@ -50,6 +111,11 @@ services:
     depends_on:
       - kafka2
       - kafka3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
 
   kafka2:
     image: confluentinc/cp-kafka:7.5.0
@@ -68,10 +134,18 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_NUM_PARTITIONS: "6"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_MESSAGE_MAX_BYTES: "10485760"
     volumes:
       - kafka2-data:/var/lib/kafka/data
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
 
   kafka3:
     image: confluentinc/cp-kafka:7.5.0
@@ -90,13 +164,22 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka1:9093,2@kafka2:9093,3@kafka3:9093"
       KAFKA_LOG_DIRS: "/var/lib/kafka/data"
       KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+      KAFKA_NUM_PARTITIONS: "6"
+      KAFKA_DEFAULT_REPLICATION_FACTOR: "3"
+      KAFKA_MESSAGE_MAX_BYTES: "10485760"
     volumes:
       - kafka3-data:/var/lib/kafka/data
     networks:
       - app-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
 
 volumes:
-  mysql-data:
+  mysql-primary-data:
+  mysql-replica-data:
   redis-data:
   kafka1-data:
   kafka2-data:
